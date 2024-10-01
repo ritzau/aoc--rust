@@ -4,7 +4,7 @@ pub mod aoc15e01;
 
 #[derive(Debug)]
 struct PuzzleCache {
-    root: PathBuf
+    root: PathBuf,
 }
 
 impl PuzzleCache {
@@ -14,23 +14,26 @@ impl PuzzleCache {
 
     fn get_session(&self) -> String {
         let path = self.root.join("session.txt");
-        fs::read_to_string(path).expect("Session file not found").trim().to_string()
+        fs::read_to_string(path)
+            .expect("Session file not found")
+            .trim()
+            .to_string()
     }
 
+    #[allow(clippy::result_large_err)]
     pub fn fetch_input(&self, year: u16, day: u8) -> Result<String, ureq::Error> {
         if let Ok(body) = self.load(year, day) {
-            println!("Cache hit");
             return Ok(body);
         }
 
         let session = self.get_session();
 
-        let body = ureq::get(format!("https://adventofcode.com/{}/day/{}/input", year, day).as_str())
-            .set("Cookie", format!("session={}", session).as_str())
-            .call()?
-            .into_string()?;
+        let body =
+            ureq::get(format!("https://adventofcode.com/{}/day/{}/input", year, day).as_str())
+                .set("Cookie", format!("session={}", session).as_str())
+                .call()?
+                .into_string()?;
 
-        println!("Saving to cache");
         self.save(year, day, body.as_str())?;
 
         Ok(body)
