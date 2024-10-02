@@ -1,17 +1,27 @@
 use std::{fs, io, path::PathBuf};
 
 pub mod aoc15e01;
+pub mod aoc15e02;
+
+fn header(day: u8, title: impl AsRef<str>) {
+    println!();
+    println!("-- Day {}: {} ---", day, title.as_ref())
+}
 
 #[derive(Debug)]
-struct PuzzleCache {
+pub struct PuzzleCache {
     root: PathBuf,
 }
 
-impl PuzzleCache {
-    fn new(root: PathBuf) -> Self {
-        Self { root }
+impl Default for PuzzleCache {
+    fn default() -> Self {
+        Self {
+            root: PathBuf::from("cache"),
+        }
     }
+}
 
+impl PuzzleCache {
     fn get_session(&self) -> String {
         let path = self.root.join("session.txt");
         fs::read_to_string(path)

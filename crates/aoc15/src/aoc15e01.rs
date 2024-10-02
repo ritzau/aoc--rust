@@ -1,23 +1,25 @@
 use std::result::Result;
 
-use crate::PuzzleCache;
+use crate::{header, PuzzleCache};
 
 #[allow(clippy::result_large_err)]
-pub fn not_quite_lisp() -> Result<bool, ureq::Error> {
-    println!("AOC15E01: Not Quite Lisp");
+pub fn not_quite_lisp(cache: &PuzzleCache, day: u8) -> Result<bool, ureq::Error> {
+    header(day, "Not Quite Lisp");
 
-    let cache = PuzzleCache::new("cache".into());
-    let body: String = cache.fetch_input(2015, 1)?;
-    let floor_count = count_floors(body.as_str());
-    let steps = find_basement(body.as_str()).unwrap();
+    let input: String = cache.fetch_input(2015, day)?;
+
+    let floor_count = count_floors(&input);
     println!("aoc15e01a: {}", floor_count);
+
+    let steps = find_basement(&input).unwrap();
     println!("aoc15e01b: {}", steps);
 
     Ok(floor_count == 232 && steps == 1783)
 }
 
-fn count_floors(input: &str) -> i32 {
+fn count_floors(input: impl AsRef<str>) -> i32 {
     input
+        .as_ref()
         .chars()
         .map(|c| match c {
             '(' => 1,
@@ -27,8 +29,9 @@ fn count_floors(input: &str) -> i32 {
         .sum()
 }
 
-fn find_basement(input: &str) -> Option<usize> {
+fn find_basement(input: impl AsRef<str>) -> Option<usize> {
     let floors: Vec<i32> = input
+        .as_ref()
         .chars()
         .map(|c| match c {
             '(' => 1,
