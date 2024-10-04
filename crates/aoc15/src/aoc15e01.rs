@@ -1,12 +1,12 @@
-use std::result::Result;
+use std::{error::Error, result::Result};
 
-use crate::{header, PuzzleCache};
+use crate::{header, PuzzleInput};
 
 #[allow(clippy::result_large_err)]
-pub fn not_quite_lisp(cache: &PuzzleCache, day: u8) -> Result<bool, ureq::Error> {
+pub fn not_quite_lisp(day: u8, input: &dyn PuzzleInput) -> Result<bool, Box<dyn Error>> {
     header(day, "Not Quite Lisp");
 
-    let input: String = cache.fetch_input(2015, day)?;
+    let input = input.read_to_string()?;
 
     let floor_count = count_floors(&input);
     println!("aoc15e01a: {}", floor_count);

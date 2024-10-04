@@ -1,4 +1,6 @@
-use crate::{header, PuzzleCache};
+use std::error::Error;
+
+use crate::{header, PuzzleInput};
 
 #[derive(Debug, PartialEq)]
 struct Package {
@@ -47,14 +49,13 @@ impl Package {
     }
 }
 
-#[allow(clippy::result_large_err)]
 pub fn i_was_told_there_would_be_no_math(
-    cache: &PuzzleCache,
     day: u8,
-) -> Result<bool, ureq::Error> {
+    input: &dyn PuzzleInput,
+) -> Result<bool, Box<dyn Error>> {
     header(day, "I Was Told there Would Be No Math");
 
-    let body: String = cache.fetch_input(2015, day)?;
+    let body: String = input.read_to_string()?;
     let packages = parse(body.as_str());
     let area: u32 = packages.iter().map(|p| p.area()).sum();
     let ribbon: u32 = packages.iter().map(|p| p.ribbon()).sum();
