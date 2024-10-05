@@ -1,12 +1,12 @@
-use std::{error::Error, result::Result};
-
-use crate::{header, PuzzleInput};
+use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
 
 #[allow(clippy::result_large_err)]
-pub fn not_quite_lisp(day: u8, input: &dyn PuzzleInput) -> Result<bool, Box<dyn Error>> {
+pub fn not_quite_lisp(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
     header(day, "Not Quite Lisp");
 
-    let input = input.read_to_string()?;
+    let input = input
+        .read_to_string()
+        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;
 
     let floor_count = count_floors(&input);
     println!("aoc15e01a: {}", floor_count);

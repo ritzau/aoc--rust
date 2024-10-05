@@ -1,14 +1,17 @@
-use std::{collections::HashSet, error::Error, iter};
+use std::{collections::HashSet, iter};
 
-use crate::{header, PuzzleInput};
+use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
 
 pub fn perfectly_spherical_houses_in_a_vacuum(
     day: u8,
-    input: &dyn PuzzleInput,
-) -> Result<bool, Box<dyn Error>> {
+    input: Box<dyn PuzzleInput>,
+) -> PuzzleResult<bool> {
     header(day, "Perfectly Spherical Houses in a Vacuum");
 
-    let input = input.read_to_string()?;
+    let input = input
+        .read_to_string()
+        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;
+
     let house_count = walk(&input);
     println!("aoc15e03a: {}", house_count);
 

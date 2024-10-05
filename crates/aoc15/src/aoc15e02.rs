@@ -1,6 +1,4 @@
-use std::error::Error;
-
-use crate::{header, PuzzleInput};
+use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
 
 #[derive(Debug, PartialEq)]
 struct Package {
@@ -51,11 +49,14 @@ impl Package {
 
 pub fn i_was_told_there_would_be_no_math(
     day: u8,
-    input: &dyn PuzzleInput,
-) -> Result<bool, Box<dyn Error>> {
+    input: Box<dyn PuzzleInput>,
+) -> PuzzleResult<bool> {
     header(day, "I Was Told there Would Be No Math");
 
-    let body: String = input.read_to_string()?;
+    let body: String = input
+        .read_to_string()
+        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;
+
     let packages = parse(body.as_str());
     let area: u32 = packages.iter().map(|p| p.area()).sum();
     let ribbon: u32 = packages.iter().map(|p| p.ribbon()).sum();

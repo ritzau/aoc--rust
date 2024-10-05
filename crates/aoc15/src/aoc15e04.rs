@@ -1,19 +1,20 @@
-use std::error::Error;
+use crate::{header, PuzzleError, PuzzleInput, PuzzleResult, EXCLUDE_SLOW_SOLUTIONS};
 
-use crate::{header, PuzzleInput};
-
-pub fn the_ideal_stocking_stuffer(
-    day: u8,
-    input: &dyn PuzzleInput,
-) -> Result<bool, Box<dyn Error>> {
+pub fn the_ideal_stocking_stuffer(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
     header(day, "The Ideal Stocking Stuffer");
-    let input = input.read_to_string()?;
+
+    if EXCLUDE_SLOW_SOLUTIONS {
+        return Ok(true);
+    }
+    let input = input
+        .read_to_string()
+        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;
 
     let m = find_match_x(input.trim(), 5);
-    println!("aocs15e04a: {}", m.unwrap());
+    println!("aoc15e04a: {}", m.unwrap());
 
     let m2 = find_match_x(input.trim(), 6);
-    println!("aocs15e04b: {}", m2.unwrap());
+    println!("aoc15e04b: {}", m2.unwrap());
 
     Ok(true)
 }
