@@ -4,6 +4,12 @@ use fancy_regex::Regex;
 pub fn probably_a_fire_hazard(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
     header(day, "Probably a Fire Hazard");
 
+    #[cfg(feature = "EXCLUDE_SLOW_SOLUTIONS")]
+    {
+        println!("Skipping...");
+        return Ok(true);
+    }
+
     let mut grid = LightGrid::new();
 
     for line in input.lines()? {

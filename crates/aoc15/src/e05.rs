@@ -52,11 +52,11 @@ fn count_really_nice_ones(reader: BufReader<Box<dyn Read>>) -> PuzzleResult<usiz
             line.map_err(|e| PuzzleError::Processing(format!("Failed to read line: {e}"), e.into()))
         })
         .try_fold(0, |acc, line| {
-            line.and_then(|l| {
+            line.map(|l| {
                 if patterns.iter().all(|p| matches(p, &l)) {
-                    Ok(acc + 1)
+                    acc + 1
                 } else {
-                    Ok(acc)
+                    acc
                 }
             })
         })?;

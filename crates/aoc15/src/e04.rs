@@ -1,11 +1,14 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult, EXCLUDE_SLOW_SOLUTIONS};
+use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
 
 pub fn the_ideal_stocking_stuffer(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
     header(day, "The Ideal Stocking Stuffer");
 
-    if EXCLUDE_SLOW_SOLUTIONS {
+    #[cfg(feature = "EXCLUDE_SLOW_SOLUTIONS")]
+    {
+        println!("Skipping...");
         return Ok(true);
     }
+
     let input = input
         .read_to_string()
         .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;

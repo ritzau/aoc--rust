@@ -4,22 +4,21 @@ use std::fmt::{Display, Formatter};
 use std::fs::{self, create_dir_all, rename, File};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
+use std::time::Duration;
 
-const EXCLUDE_SLOW_SOLUTIONS: bool = true;
-
-pub mod aoc15e01;
-pub mod aoc15e02;
-pub mod aoc15e03;
-pub mod aoc15e04;
-pub mod aoc15e05;
-pub mod aoc15e06;
-
-pub use aoc15e01::not_quite_lisp as e01_not_quite_lisp;
-pub use aoc15e02::i_was_told_there_would_be_no_math as e02_i_was_told_there_would_be_no_math;
-pub use aoc15e03::perfectly_spherical_houses_in_a_vacuum as e03_perfectly_spherical_houses_in_a_vacuum;
-pub use aoc15e04::the_ideal_stocking_stuffer as e04_the_ideal_stocking_stuffer;
-pub use aoc15e05::doesnt_he_have_intern_elves_for_this as e05_doesnt_he_have_intern_elves_for_this;
-pub use aoc15e06::probably_a_fire_hazard as e06_probably_a_fire_hazard;
+pub mod e01;
+pub mod e02;
+pub mod e03;
+pub mod e04;
+pub mod e05;
+pub mod e06;
+pub mod e07;
+pub mod e08;
+pub mod e09;
+pub mod e10;
+pub mod e11;
+pub mod e12;
+pub mod e13;
 
 type PuzzleResult<T> = Result<T, PuzzleError>;
 type AoCSolution = fn(u8, Box<dyn PuzzleInput>) -> PuzzleResult<bool>;
@@ -50,12 +49,24 @@ pub fn run<T>(seq: T) -> PuzzleResult<()>
 where
     T: IntoIterator<Item = AoCSolution>,
 {
-    for (day, f) in seq.into_iter().enumerate() {
-        let day = (1 + day).try_into().unwrap();
-        verify(day, f)?;
+    #[cfg(feature = "OnlyLastPuzzle")]
+    {
+        if let Some((day, f)) = seq.into_iter().enumerate().last() {
+            verify((day + 1).try_into().unwrap(), f)?;
+            Ok(())
+        } else {
+            Err(PuzzleError::Input("No puzzles available".into()))
+        }
     }
 
-    Ok(())
+    #[cfg(not(feature = "OnlyLastPuzzle"))]
+    {
+        for (day, f) in seq.into_iter().enumerate() {
+            verify((day + 1).try_into().unwrap(), f)?;
+        }
+
+        Ok(())
+    }
 }
 
 fn verify(day: u8, f: AoCSolution) -> PuzzleResult<()> {
@@ -64,7 +75,9 @@ fn verify(day: u8, f: AoCSolution) -> PuzzleResult<()> {
         PuzzleError::Input(format!("Failed to get input for 2015 day {day}: {e:?}"))
     })?;
 
-    match f(day, input) {
+    let start = std::time::Instant::now();
+
+    let result = match f(day, input) {
         Ok(false) => Err(PuzzleError::Verification(format!(
             "Verification for day {day} failed"
         ))),
@@ -73,7 +86,15 @@ fn verify(day: u8, f: AoCSolution) -> PuzzleResult<()> {
             err.into(),
         )),
         _ => Ok(()),
-    }
+    };
+
+    let duration = start.elapsed();
+    println!(
+        "Duration: {:?}",
+        Duration::from_millis(duration.as_millis() as u64)
+    );
+
+    result
 }
 
 fn header(day: u8, title: impl AsRef<str>) {
