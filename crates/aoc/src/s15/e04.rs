@@ -1,6 +1,9 @@
 use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
 
-pub fn the_ideal_stocking_stuffer(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
+pub fn the_ideal_stocking_stuffer(
+    day: u8,
+    #[allow(unused_variables)] input: Box<dyn PuzzleInput>,
+) -> PuzzleResult<bool> {
     header(day, "The Ideal Stocking Stuffer");
 
     #[cfg(feature = "EXCLUDE_SLOW_SOLUTIONS")]
@@ -9,17 +12,20 @@ pub fn the_ideal_stocking_stuffer(day: u8, input: Box<dyn PuzzleInput>) -> Puzzl
         return Ok(true);
     }
 
-    let input = input
-        .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;
+    #[cfg(not(feature = "EXCLUDE_SLOW_SOLUTIONS"))]
+    {
+        let input = input.read_to_string().map_err(|e| {
+            PuzzleError::Input(format!("Failed to read the input for day {day}: {e}"))
+        })?;
 
-    let m = find_match_x(input.trim(), 5);
-    println!("aoc15e04a: {}", m.unwrap());
+        let m = find_match_x(input.trim(), 5);
+        println!("aoc15e04a: {}", m.unwrap());
 
-    let m2 = find_match_x(input.trim(), 6);
-    println!("aoc15e04b: {}", m2.unwrap());
+        let m2 = find_match_x(input.trim(), 6);
+        println!("aoc15e04b: {}", m2.unwrap());
 
-    Ok(true)
+        Ok(true)
+    }
 }
 
 #[allow(dead_code)]
@@ -60,6 +66,7 @@ fn find_match2(input: impl AsRef<str>) -> Option<u32> {
     }
 }
 
+#[allow(dead_code)]
 fn find_match_x(input: impl AsRef<str>, leading_zeroes: usize) -> Option<u32> {
     let input_str = input.as_ref();
     let mut buffer = String::with_capacity(input_str.len() + 10); // Preallocate space

@@ -1,12 +1,15 @@
-use crate::e07::Operand::{Value, Wire};
-use crate::e07::Operation::{And, Forward, LShift, Not, Or, RShift};
+use crate::s15::e07::Operand::{Value, Wire};
+use crate::s15::e07::Operation::{And, Forward, LShift, Not, Or, RShift};
 use crate::{header, PuzzleInput, PuzzleResult};
 use regex::{Match, Regex};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 
-pub fn some_assembly_required(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
+pub fn some_assembly_required(
+    day: u8,
+    #[allow(unused_variables)] input: Box<dyn PuzzleInput>,
+) -> PuzzleResult<bool> {
     header(day, "Some Assembly Required");
 
     #[cfg(feature = "EXCLUDE_SLOW_SOLUTIONS")]
@@ -15,42 +18,45 @@ pub fn some_assembly_required(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleRes
         return Ok(true);
     }
 
-    let mut circuit = Circuit::new();
+    #[cfg(not(feature = "EXCLUDE_SLOW_SOLUTIONS"))]
+    {
+        let mut circuit = Circuit::new();
 
-    for line in input.lines()? {
-        let line = line?;
-        let gate = Gate::parse(line);
-        circuit.add_gate(gate);
+        for line in input.lines()? {
+            let line = line?;
+            let gate = Gate::parse(line);
+            circuit.add_gate(gate);
+        }
+
+        let a1 = match circuit.eval("a") {
+            Some(result) => {
+                println!("aoc15e07a: {}", result);
+                result
+            }
+            None => return Ok(false),
+        };
+
+        let mut circuit = Circuit::new();
+
+        for line in input.lines()? {
+            let line = line?;
+            let mut gate = Gate::parse(line);
+            if gate.operation == Forward && gate.output == "b" {
+                gate.inputs = vec![Value(a1)]
+            }
+            circuit.add_gate(gate);
+        }
+
+        let a2 = match circuit.eval("a") {
+            Some(result) => {
+                println!("aoc15e07b: {}", result);
+                result
+            }
+            None => return Ok(false),
+        };
+
+        Ok(a1 == 16076 && a2 == 2797)
     }
-
-    let a1 = match circuit.eval("a") {
-        Some(result) => {
-            println!("aoc15e07a: {}", result);
-            result
-        }
-        None => return Ok(false),
-    };
-
-    let mut circuit = Circuit::new();
-
-    for line in input.lines()? {
-        let line = line?;
-        let mut gate = Gate::parse(line);
-        if gate.operation == Forward && gate.output == "b" {
-            gate.inputs = vec![Value(a1)]
-        }
-        circuit.add_gate(gate);
-    }
-
-    let a2 = match circuit.eval("a") {
-        Some(result) => {
-            println!("aoc15e07b: {}", result);
-            result
-        }
-        None => return Ok(false),
-    };
-
-    Ok(a1 == 16076 && a2 == 2797)
 }
 
 type WireValue = u16;

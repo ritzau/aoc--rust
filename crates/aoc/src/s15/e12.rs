@@ -172,7 +172,7 @@ mod test {
         assert_eq!(dummy_parse(r#"{"a":2,"b":4}"#).unwrap(), 6);
         assert_eq!(dummy_parse(r#"{"a":{"b":4},"c":-1}"#).unwrap(), 3);
         assert_eq!(dummy_parse(r#"{"a":[-1,1]}"#).unwrap(), 0);
-        assert_eq!(dummy_parse(r#"[-1,{"a":1}]"#).unwrap(), 1);
+        assert_eq!(dummy_parse(r#"[-1,{"a":1}]"#).unwrap(), 0);
     }
 
     #[test]

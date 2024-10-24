@@ -1,7 +1,10 @@
 use crate::{header, PuzzleInput, PuzzleResult};
 use fancy_regex::Regex;
 
-pub fn probably_a_fire_hazard(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
+pub fn probably_a_fire_hazard(
+    day: u8,
+    #[allow(unused_variables)] input: Box<dyn PuzzleInput>,
+) -> PuzzleResult<bool> {
     header(day, "Probably a Fire Hazard");
 
     #[cfg(feature = "EXCLUDE_SLOW_SOLUTIONS")]
@@ -10,35 +13,38 @@ pub fn probably_a_fire_hazard(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleRes
         return Ok(true);
     }
 
-    let mut grid = LightGrid::new();
+    #[cfg(not(feature = "EXCLUDE_SLOW_SOLUTIONS"))]
+    {
+        let mut grid = LightGrid::new();
 
-    for line in input.lines()? {
-        let instruction = Instruction::parse(line?);
-        match instruction {
-            Instruction::TurnOn(tl, br) => grid.turn_on(tl, br),
-            Instruction::TurnOff(tl, br) => grid.turn_off(tl, br),
-            Instruction::Toggle(tl, br) => grid.toggle(tl, br),
+        for line in input.lines()? {
+            let instruction = Instruction::parse(line?);
+            match instruction {
+                Instruction::TurnOn(tl, br) => grid.turn_on(tl, br),
+                Instruction::TurnOff(tl, br) => grid.turn_off(tl, br),
+                Instruction::Toggle(tl, br) => grid.toggle(tl, br),
+            }
         }
-    }
 
-    let count = grid.count_on();
-    println!("aoc15e06a: {}", count);
+        let count = grid.count_on();
+        println!("aoc15e06a: {}", count);
 
-    let mut grid = LightGrid2::new();
+        let mut grid = LightGrid2::new();
 
-    for line in input.lines()? {
-        let instruction = Instruction::parse(line?);
-        match instruction {
-            Instruction::TurnOn(tl, br) => grid.turn_on(tl, br),
-            Instruction::TurnOff(tl, br) => grid.turn_off(tl, br),
-            Instruction::Toggle(tl, br) => grid.toggle(tl, br),
+        for line in input.lines()? {
+            let instruction = Instruction::parse(line?);
+            match instruction {
+                Instruction::TurnOn(tl, br) => grid.turn_on(tl, br),
+                Instruction::TurnOff(tl, br) => grid.turn_off(tl, br),
+                Instruction::Toggle(tl, br) => grid.toggle(tl, br),
+            }
         }
+
+        let sum = grid.sum();
+        println!("aoc15e06b: {}", sum);
+
+        Ok(count == 400410 && sum == 15343601)
     }
-
-    let sum = grid.sum();
-    println!("aoc15e06b: {}", sum);
-
-    Ok(count == 400410 && sum == 15343601)
 }
 
 #[derive(Debug)]

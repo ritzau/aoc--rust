@@ -6,19 +6,7 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
 use std::time::Duration;
 
-pub mod e01;
-pub mod e02;
-pub mod e03;
-pub mod e04;
-pub mod e05;
-pub mod e06;
-pub mod e07;
-pub mod e08;
-pub mod e09;
-pub mod e10;
-pub mod e11;
-pub mod e12;
-pub mod e13;
+pub mod s15;
 
 type PuzzleResult<T> = Result<T, PuzzleError>;
 type AoCSolution = fn(u8, Box<dyn PuzzleInput>) -> PuzzleResult<bool>;
@@ -243,8 +231,6 @@ impl PuzzleCache {
     }
 
     fn path(&self, year: u16, day: u8) -> PathBuf {
-        self.root
-            .join("aoc15")
-            .join(format!("{}_{}.txt", year, day))
+        self.root.join("aoc").join(format!("{}_{}.txt", year, day))
     }
 }

@@ -1,12 +1,11 @@
 [package]
-name = "aoc15"
+name = "aoc"
 version = "0.1.0"
 edition = "2021"
 
 [features]
 EXCLUDE_SLOW_SOLUTIONS = []
 OnlyLastPuzzle = []
-default = ["EXCLUDE_SLOW_SOLUTIONS"]
 
 [dependencies]
 fancy-regex = "0.13.0"
