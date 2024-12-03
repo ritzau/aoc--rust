@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 use fancy_regex::Regex;
 
 const DAY: Day = Day(6);
@@ -19,7 +20,7 @@ pub fn probably_a_fire_hazard(aoc: &AocCache) -> PuzzleResult<bool> {
     {
         let mut grid = LightGrid::new();
 
-        for line in input.lines() {
+        for line in input.lines()? {
             let instruction = Instruction::parse(&line);
             match instruction {
                 Instruction::TurnOn(tl, br) => grid.turn_on(tl, br),
@@ -33,7 +34,7 @@ pub fn probably_a_fire_hazard(aoc: &AocCache) -> PuzzleResult<bool> {
 
         let mut grid = LightGrid2::new();
 
-        for line in input.lines() {
+        for line in input.lines()? {
             let instruction = Instruction::parse(&line);
             match instruction {
                 Instruction::TurnOn(tl, br) => grid.turn_on(tl, br),

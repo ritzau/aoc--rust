@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::{InputFetcher, Lines};
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleError, PuzzleResult};
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 
@@ -10,10 +11,10 @@ pub fn all_in_a_single_night(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "All in a Single Night");
     let input = aoc.get_input(YEAR, DAY)?;
 
-    let shortest = shortest_path(input.lines())?;
+    let shortest = shortest_path(input.lines()?)?;
     println!("aoc15e09a: {}", shortest);
 
-    let longest = longest_path(input.lines())?;
+    let longest = longest_path(input.lines()?)?;
     println!("aoc15e09b: {}", longest);
 
     Ok(shortest == 207 && longest == 804)

@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::{InputFetcher, Lines};
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleError, PuzzleResult};
 use itertools::Itertools;
 use rand::seq::SliceRandom;
 use std::collections::HashSet;
@@ -10,7 +11,7 @@ const DAY: Day = Day(19);
 pub fn medicine_for_rudolph(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "Medicine for Rudolph");
 
-    let (rules, molecule) = parse(aoc.get_input(YEAR, DAY)?.lines())?;
+    let (rules, molecule) = parse(aoc.get_input(YEAR, DAY)?.lines()?)?;
     // println!("input: {:?}", input);
     let rule_set = rules
         .iter()

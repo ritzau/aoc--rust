@@ -8,7 +8,7 @@ EXCLUDE_SLOW_SOLUTIONS = []
 OnlyLastPuzzle = []
 
 [dependencies]
-fancy-regex = "0.13.0"
+fancy-regex = "0.14.0"
 itertools = "0.13.0"
 log = "0.4.22"
 md5 = "0.7.0"

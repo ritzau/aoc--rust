@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::{InputFetcher, Lines};
 use crate::s24::YEAR;
-use crate::{head, AocCache, Day, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 
 const DAY: Day = Day(1);
 
@@ -8,11 +9,11 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
     head(YEAR, DAY, "Historian Hysteria");
     let input = aoc.get_input(YEAR, DAY)?;
 
-    let p1 = part1(input.lines())?;
+    let p1 = part1(input.lines()?)?;
     println!("Part 1: {}", p1);
     assert_eq!(p1, 2430334);
 
-    let p2 = part2(input.lines())?;
+    let p2 = part2(input.lines()?)?;
     println!("Part 2: {}", p2);
     assert_eq!(p2, 28786472);
 
@@ -74,13 +75,11 @@ mod tests {
 
     #[test]
     fn test_part1() {
-        let lines = Lines::from_string(INPUT);
-        assert_eq!(part1(lines).unwrap(), 11);
+        assert_eq!(part1(INPUT.into()).unwrap(), 11);
     }
 
     #[test]
     fn test_part2() {
-        let lines = Lines::from_string(INPUT);
-        assert_eq!(part2(lines).unwrap(), 31);
+        assert_eq!(part2(INPUT.into()).unwrap(), 31);
     }
 }

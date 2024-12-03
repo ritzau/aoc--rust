@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::{InputFetcher, Lines};
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 use fancy_regex::Regex;
 
 const DAY: Day = Day(5);
@@ -11,10 +12,10 @@ pub fn doesnt_he_have_intern_elves_for_this(aoc: &AocCache) -> PuzzleResult<bool
     // .read_to_string()
     // .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {DAY}: {e}")))?;
 
-    let nice_count = count_nice_ones(input.lines())?;
+    let nice_count = count_nice_ones(input.lines()?)?;
     println!("aoc15e05a: {nice_count}");
 
-    let really_nice_count = count_really_nice_ones(input.lines())?;
+    let really_nice_count = count_really_nice_ones(input.lines()?)?;
     println!("aoc15e05b: {really_nice_count}");
 
     Ok(nice_count == 255 && really_nice_count == 55)

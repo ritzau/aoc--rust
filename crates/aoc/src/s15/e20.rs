@@ -1,5 +1,6 @@
+use crate::cache::AocCache;
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 
 const DAY: Day = Day(20);
 

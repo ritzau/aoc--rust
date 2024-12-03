@@ -1,4 +1,5 @@
-use crate::{AocCache, PuzzleError, PuzzleResult, Year};
+use crate::cache::AocCache;
+use crate::{PuzzleError, PuzzleResult, Year};
 use std::time::Duration;
 
 pub mod e01;

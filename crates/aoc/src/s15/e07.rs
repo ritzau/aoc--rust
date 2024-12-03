@@ -1,8 +1,9 @@
+use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::e07::Operand::{Value, Wire};
 use crate::s15::e07::Operation::{And, Forward, LShift, Not, Or, RShift};
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 use regex::{Match, Regex};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -24,7 +25,7 @@ pub fn some_assembly_required(aoc: &AocCache) -> PuzzleResult<bool> {
     {
         let mut circuit = Circuit::new();
 
-        for line in input.lines() {
+        for line in input.lines()? {
             let line = line;
             let gate = Gate::parse(&line);
             circuit.add_gate(gate);
@@ -40,7 +41,7 @@ pub fn some_assembly_required(aoc: &AocCache) -> PuzzleResult<bool> {
 
         let mut circuit = Circuit::new();
 
-        for line in input.lines() {
+        for line in input.lines()? {
             let line = line;
             let mut gate = Gate::parse(&line);
             if gate.operation == Forward && gate.output == "b" {

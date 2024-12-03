@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::{Input, InputFetcher};
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleError, PuzzleResult};
 use std::collections::BTreeMap;
 
 const DAY: Day = Day(16);
@@ -123,7 +124,7 @@ where
 
 fn parse(input: &Input) -> PuzzleResult<Vec<Sue>> {
     input
-        .lines()
+        .lines()?
         .map(|line| {
             Sue::try_from(line).map_err(|e| PuzzleError::Input(format!("Parse error: {e}")))
         })

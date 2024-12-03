@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 use regex::Regex;
 use std::cmp::max;
 use std::sync::LazyLock;
@@ -11,7 +12,7 @@ pub fn science_for_hungry_people(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "Science for Hungry People");
 
     let mut ingredients = Vec::<Ingredient>::new();
-    for line in aoc.get_input(YEAR, DAY)?.lines() {
+    for line in aoc.get_input(YEAR, DAY)?.lines()? {
         ingredients.push(Ingredient::parse(&line));
     }
 

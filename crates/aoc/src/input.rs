@@ -1,4 +1,5 @@
-use crate::{AocCache, Day, PuzzleResult, Year};
+use crate::cache::AocCache;
+use crate::{Day, PuzzleError, PuzzleResult, Year};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::path::PathBuf;
@@ -21,10 +22,15 @@ impl<'a> Input<'a> {
         }
     }
 
-    pub fn lines(&self) -> Lines<'a> {
+    pub fn lines(&self) -> PuzzleResult<Lines<'a>> {
         match &self.implementation {
-            Source::File(file) => Lines::from_file(File::open(file).unwrap()),
-            Source::String(string) => Lines::from_string(string),
+            Source::File(file) => Ok(Lines::from_file(File::open(file).map_err(|error| {
+                PuzzleError::IO {
+                    msg: format!("Failed to open file: {}", file.display()),
+                    error,
+                }
+            })?)),
+            Source::String(string) => Ok(Lines::from_string(string)),
         }
     }
 
@@ -62,6 +68,12 @@ impl<'a> Lines<'a> {
         Lines {
             implementation: LinesIteratorImpl::String(lines),
         }
+    }
+}
+
+impl<'a> From<&'a str> for Lines<'a> {
+    fn from(string: &'a str) -> Self {
+        Lines::from_string(string)
     }
 }
 

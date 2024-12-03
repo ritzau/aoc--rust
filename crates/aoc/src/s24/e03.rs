@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s24::YEAR;
-use crate::{head, AocCache, Day, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 use regex::Regex;
 
 const DAY: Day = Day(3);

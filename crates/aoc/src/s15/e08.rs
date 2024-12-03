@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::{InputFetcher, Lines};
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleError, PuzzleResult};
 
 const DAY: Day = Day(8);
 
@@ -8,10 +9,10 @@ pub fn matchsticks(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "Matchsticks");
     let input = aoc.get_input(YEAR, DAY)?;
 
-    let decoded_delta = decode_delta(input.lines())?;
+    let decoded_delta = decode_delta(input.lines()?)?;
     println!("aoc15e08a: {}", decoded_delta);
 
-    let encoded_delta = encode_delta(input.lines())?;
+    let encoded_delta = encode_delta(input.lines()?)?;
     println!("aoc15e08b: {}", encoded_delta);
 
     Ok(decoded_delta == 1371 && encoded_delta == 2117)

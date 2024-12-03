@@ -1,6 +1,7 @@
+use crate::cache::AocCache;
 use crate::input::{InputFetcher, Lines};
 use crate::s15::YEAR;
-use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleError, PuzzleResult};
 use itertools::Itertools;
 use std::cmp::max;
 use std::collections::{HashMap, HashSet};
@@ -12,8 +13,8 @@ pub fn knights_of_the_dinner_table(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "Knights of the Dinner Table");
     let input = aoc.get_input(YEAR, DAY)?;
 
-    let p1 = part_1b(input.lines())?;
-    let p2 = part_2b(input.lines())?;
+    let p1 = part_1b(input.lines()?)?;
+    let p2 = part_2b(input.lines()?)?;
 
     Ok(p1 == 618 && p2 == 601)
 }
