@@ -1,38 +1,35 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
+use rayon::iter::ParallelIterator;
+use rayon::prelude::ParallelBridge;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
-pub fn the_ideal_stocking_stuffer(
-    day: u8,
-    #[allow(unused_variables)] input: Box<dyn PuzzleInput>,
-) -> PuzzleResult<bool> {
-    header(day, "The Ideal Stocking Stuffer");
+const DAY: Day = Day(4);
 
-    #[cfg(feature = "EXCLUDE_SLOW_SOLUTIONS")]
-    {
-        println!("Skipping...");
-        return Ok(true);
-    }
+pub fn the_ideal_stocking_stuffer(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "The Ideal Stocking Stuffer");
 
-    #[cfg(not(feature = "EXCLUDE_SLOW_SOLUTIONS"))]
-    {
-        let input = input.read_to_string().map_err(|e| {
-            PuzzleError::Input(format!("Failed to read the input for day {day}: {e}"))
-        })?;
+    let input = aoc
+        .get_input(YEAR, DAY)?
+        .read_to_string()
+        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {DAY}: {e}")))?;
 
-        let m = find_match_x(input.trim(), 5);
-        println!("aoc15e04a: {}", m.unwrap());
+    let m = find_match_threaded(input.trim(), 5).unwrap();
+    println!("aoc15e04a: {}", m);
 
-        let m2 = find_match_x(input.trim(), 6);
-        println!("aoc15e04b: {}", m2.unwrap());
+    let m2 = find_match_threaded(input.trim(), 6).unwrap();
+    println!("aoc15e04b: {}", m2);
 
-        Ok(true)
-    }
+    Ok(m == 117946 && m2 == 3938038)
 }
 
 #[allow(dead_code)]
-fn find_match(key: impl AsRef<str>) -> Option<u32> {
+fn find_match(key: &str) -> Option<u32> {
     let mut i = 0u32;
     loop {
-        let test_content = format!("{}{}", key.as_ref(), i);
+        let test_content = format!("{}{}", key, i);
         let digest = md5::compute(test_content.as_bytes());
         let s = format!("{:x}", digest);
         if s.starts_with("00000") {
@@ -48,10 +45,10 @@ fn find_match(key: impl AsRef<str>) -> Option<u32> {
 }
 
 #[allow(dead_code)]
-fn find_match2(input: impl AsRef<str>) -> Option<u32> {
+fn find_match2(input: &str) -> Option<u32> {
     let mut i = 0u32;
     loop {
-        let test_content = format!("{}{}", input.as_ref(), i);
+        let test_content = format!("{}{}", input, i);
         let digest = md5::compute(test_content.as_bytes());
         let s = format!("{:x}", digest);
         if s.starts_with("000000") {
@@ -67,9 +64,8 @@ fn find_match2(input: impl AsRef<str>) -> Option<u32> {
 }
 
 #[allow(dead_code)]
-fn find_match_x(input: impl AsRef<str>, leading_zeroes: usize) -> Option<u32> {
-    let input_str = input.as_ref();
-    let mut buffer = String::with_capacity(input_str.len() + 10); // Preallocate space
+fn find_match_x(input: &str, leading_zeroes: usize) -> Option<u32> {
+    let mut buffer = String::with_capacity(input.len() + 10); // Preallocate space
     let mut i = 0u32;
 
     // Calculate how many full bytes we need to check and the remaining bits
@@ -78,7 +74,7 @@ fn find_match_x(input: impl AsRef<str>, leading_zeroes: usize) -> Option<u32> {
 
     loop {
         buffer.clear(); // Reuse buffer instead of creating new strings
-        buffer.push_str(input_str);
+        buffer.push_str(input);
         buffer.push_str(&i.to_string()); // Append `i` to the string
 
         let digest = md5::compute(buffer.as_bytes());
@@ -102,13 +98,156 @@ fn find_match_x(input: impl AsRef<str>, leading_zeroes: usize) -> Option<u32> {
     }
 }
 
+#[allow(dead_code)]
+fn find_match_chunk(
+    input: &str,
+    leading_zeroes: usize,
+    iterator: impl IntoIterator<Item = u32>,
+) -> Option<u32> {
+    let mut buffer = String::with_capacity(input.len() + 10); // Preallocate space
+
+    // Calculate how many full bytes we need to check and the remaining bits
+    let full_bytes = leading_zeroes / 2; // 2 hex digits per byte
+    let remaining_bits = (leading_zeroes % 2) * 4; // 4 bits per hex digit
+
+    for i in iterator.into_iter() {
+        buffer.clear(); // Reuse buffer instead of creating new strings
+        buffer.push_str(input);
+        buffer.push_str(&i.to_string()); // Append `i` to the string
+
+        let digest = md5::compute(buffer.as_bytes());
+
+        // Check full bytes
+        if digest[..full_bytes].iter().any(|&byte| byte != 0) {
+            continue;
+        }
+
+        // Check remaining bits (if any)
+        if remaining_bits > 0 {
+            let mask = 0xFF << (8 - remaining_bits); // Create a mask for the remaining bits
+            if digest[full_bytes] & mask != 0 {
+                continue;
+            }
+        }
+
+        return Some(i);
+    }
+
+    None
+}
+
+#[allow(dead_code)]
+fn find_match_rayon(input: &str, leading_zeroes: usize) -> Option<u32> {
+    let chunk_size = 10_000u32;
+
+    for i in (0u32..4_000_000).step_by(chunk_size as usize) {
+        let matches: Vec<u32> = (i..i + chunk_size)
+            .par_bridge()
+            .filter_map(|j| quick_test(input, leading_zeroes, j))
+            .collect();
+
+        if let Some(v) = matches.into_iter().min() {
+            return Some(v);
+        }
+    }
+
+    None
+}
+
+fn quick_test(input: &str, leading_zeroes: usize, value: u32) -> Option<u32> {
+    let mut buffer = String::with_capacity(input.len() + 10); // Preallocate space
+
+    // Calculate how many full bytes we need to check and the remaining bits
+    let full_bytes = leading_zeroes / 2; // 2 hex digits per byte
+    let remaining_bits = (leading_zeroes % 2) * 4; // 4 bits per hex digit
+
+    // buffer.clear(); // Reuse buffer instead of creating new strings
+    buffer.push_str(input);
+    buffer.push_str(&value.to_string()); // Append `value` to the string
+
+    let digest = md5::compute(buffer.as_bytes());
+
+    // Check full bytes
+    if digest[..full_bytes].iter().any(|&byte| byte != 0) {
+        return None;
+    }
+
+    // Check remaining bits (if any)
+    if remaining_bits > 0 {
+        let mask = 0xFF << (8 - remaining_bits); // Create a mask for the remaining bits
+        if digest[full_bytes] & mask != 0 {
+            return None;
+        }
+    }
+
+    Some(value)
+}
+
+fn find_match_threaded(input: &str, leading_zeroes: usize) -> Option<u32> {
+    let num_threads = num_cpus::get();
+    let chunk_size = 10_000;
+    let find =
+        |start| find_match_threaded_chunk(input, leading_zeroes, num_threads, chunk_size, start);
+
+    (0..10_000_000)
+        .step_by(num_threads * chunk_size)
+        .find_map(|start| find(start))
+}
+
+fn find_match_threaded_chunk(
+    input: &str,
+    leading_zeroes: usize,
+    num_threads: usize,
+    chunk_size: usize,
+    start: u32,
+) -> Option<u32> {
+    let input = Arc::new(input.to_string());
+    let result: Arc<Mutex<Option<u32>>> = Arc::new(Mutex::new(None));
+
+    let mut handles = vec![];
+
+    for thread_id in 0..num_threads {
+        let input = Arc::clone(&input);
+        let result = Arc::clone(&result);
+        let thread_start = start + (thread_id * chunk_size) as u32;
+        let thread_end = thread_start + chunk_size as u32;
+
+        let handle = thread::spawn(move || {
+            if let Some(value) = find_match_chunk(&input, leading_zeroes, thread_start..thread_end)
+            {
+                let mut result = result.lock().unwrap();
+                if result.is_none() || value < result.unwrap() {
+                    *result = Some(value);
+                }
+            }
+        });
+
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    let result = result.lock().unwrap();
+    *result
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
+    #[ignore] // Slow test
     fn find_matches() {
         assert_eq!(find_match_x("abcdef", 5), Some(609043));
         assert_eq!(find_match_x("pqrstuv", 5), Some(1048970));
+    }
+
+    #[test]
+    fn test_rayon() {
+        let input = "abcdef";
+        let m = find_match_rayon(input, 5);
+        assert_eq!(m, Some(609043));
     }
 }

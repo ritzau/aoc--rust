@@ -1,4 +1,8 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
+
+const DAY: Day = Day(2);
 
 #[derive(Debug, PartialEq)]
 struct Package {
@@ -47,15 +51,13 @@ impl Package {
     }
 }
 
-pub fn i_was_told_there_would_be_no_math(
-    day: u8,
-    input: Box<dyn PuzzleInput>,
-) -> PuzzleResult<bool> {
-    header(day, "I Was Told there Would Be No Math");
+pub fn i_was_told_there_would_be_no_math(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "I Was Told there Would Be No Math");
+    let input = aoc.get_input(YEAR, DAY)?;
 
     let body: String = input
         .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;
+        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {DAY}: {e}")))?;
 
     let packages = parse(body.as_str());
     let area: u32 = packages.iter().map(|p| p.area()).sum();

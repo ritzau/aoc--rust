@@ -1,12 +1,17 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
+
+const DAY: Day = Day(1);
 
 #[allow(clippy::result_large_err)]
-pub fn not_quite_lisp(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
-    header(day, "Not Quite Lisp");
+pub fn not_quite_lisp(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Not Quite Lisp");
+    let input = aoc.get_input(YEAR, DAY)?;
 
-    let input = input
-        .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;
+    let input = input.read_to_string().map_err(|e| {
+        PuzzleError::Input(format!("Failed to read the input for day {}: {e}", DAY.0))
+    })?;
 
     let floor_count = count_floors(&input);
     println!("aoc15e01a: {}", floor_count);
@@ -17,9 +22,8 @@ pub fn not_quite_lisp(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool
     Ok(floor_count == 232 && steps == 1783)
 }
 
-fn count_floors(input: impl AsRef<str>) -> i32 {
+fn count_floors(input: &str) -> i32 {
     input
-        .as_ref()
         .chars()
         .map(|c| match c {
             '(' => 1,
@@ -29,9 +33,8 @@ fn count_floors(input: impl AsRef<str>) -> i32 {
         .sum()
 }
 
-fn find_basement(input: impl AsRef<str>) -> Option<usize> {
+fn find_basement(input: &str) -> Option<usize> {
     let floors: Vec<i32> = input
-        .as_ref()
         .chars()
         .map(|c| match c {
             '(' => 1,

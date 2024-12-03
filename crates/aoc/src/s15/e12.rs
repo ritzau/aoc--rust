@@ -1,11 +1,16 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
 use regex::Regex;
 use std::iter::Peekable;
 use std::str::Chars;
 
-pub fn js_abacus_framework_io(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
-    header(day, "JSAbacusFramework.io");
-    let input = input
+const DAY: Day = Day(12);
+
+pub fn js_abacus_framework_io(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "JSAbacusFramework.io");
+    let input = aoc
+        .get_input(YEAR, DAY)?
         .read_to_string()
         .map_err(|_| PuzzleError::Input("foo".into()))?
         .trim()
@@ -142,8 +147,8 @@ impl<'a> DummyParser<'a> {
     }
 }
 
-fn dummy_parse(s: impl AsRef<str>) -> PuzzleResult<i32> {
-    DummyParser::new(s.as_ref()).parse()
+fn dummy_parse(s: &str) -> PuzzleResult<i32> {
+    DummyParser::new(s).parse()
 }
 
 #[cfg(test)]

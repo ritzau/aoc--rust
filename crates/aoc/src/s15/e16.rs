@@ -1,10 +1,14 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::{Input, InputFetcher};
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
 use std::collections::BTreeMap;
 
-pub fn aunt_sue(day: u8, input: impl AsRef<dyn PuzzleInput>) -> PuzzleResult<bool> {
-    header(day, "Aunt Sue");
+const DAY: Day = Day(16);
 
-    let sues = parse(&input)?;
+pub fn aunt_sue(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Aunt Sue");
+
+    let sues = parse(&aoc.get_input(YEAR, DAY)?)?;
     let tape = Sue {
         id: 0,
         props: BTreeMap::from([
@@ -23,9 +27,15 @@ pub fn aunt_sue(day: u8, input: impl AsRef<dyn PuzzleInput>) -> PuzzleResult<boo
 
     let matching_sues: Vec<_> = sues.iter().filter(|&s| tape.matches(s)).collect();
     assert_eq!(matching_sues.len(), 1);
-    println!("aoc15e16a: {:?}", matching_sues.first().unwrap().id);
+    let matching_sue = matching_sues.first().unwrap();
+    println!("aoc15e16a: {:?}", matching_sue.id);
 
-    Ok(true)
+    let really_matching_sues: Vec<_> = sues.iter().filter(|&s| tape.really_matches(s)).collect();
+    assert_eq!(really_matching_sues.len(), 1);
+    let really_matching_sue = really_matching_sues.first().unwrap();
+    println!("aoc15e16b: {:?}", really_matching_sue.id);
+
+    Ok(matching_sue.id == 213 && really_matching_sue.id == 323)
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -75,6 +85,16 @@ impl Sue {
             .iter()
             .all(|(prop, value)| other.props.get(prop).map_or(true, |v| *v == *value))
     }
+
+    fn really_matches(&self, other: &Sue) -> bool {
+        self.props.iter().all(|(prop, value)| {
+            other.props.get(prop).map_or(true, |v| match prop {
+                SueProp::Cats | SueProp::Trees => return *v > *value,
+                SueProp::Pomeranians | SueProp::Goldfish => return *v < *value,
+                _ => *v == *value,
+            })
+        })
+    }
 }
 
 impl<T> From<T> for Sue
@@ -101,14 +121,11 @@ where
     }
 }
 
-fn parse(input: impl AsRef<dyn PuzzleInput>) -> PuzzleResult<Vec<Sue>> {
+fn parse(input: &Input) -> PuzzleResult<Vec<Sue>> {
     input
-        .as_ref()
-        .lines()?
-        .map(|l| {
-            l.and_then(|line| {
-                Sue::try_from(line).map_err(|e| PuzzleError::Input(format!("Parse error: {e}")))
-            })
+        .lines()
+        .map(|line| {
+            Sue::try_from(line).map_err(|e| PuzzleError::Input(format!("Parse error: {e}")))
         })
         .collect::<PuzzleResult<Vec<_>>>()
 }

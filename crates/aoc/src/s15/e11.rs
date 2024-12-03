@@ -1,9 +1,14 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
 
-pub fn corporate_policy(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
-    header(day, "Corporate Policy");
+const DAY: Day = Day(11);
 
-    let input = input
+pub fn corporate_policy(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Corporate Policy");
+
+    let input = aoc
+        .get_input(YEAR, DAY)?
         .read_to_string()
         .map_err(|_| PuzzleError::Input("foo".into()))?
         .trim()
@@ -35,7 +40,7 @@ fn increment(pw: &mut Vec<u8>) {
     }
 }
 
-fn next_pw(s: impl AsRef<str>) -> String {
+fn next_pw(s: &str) -> String {
     let mut bytes = to_bytes(s);
     loop {
         increment(&mut bytes);
@@ -45,13 +50,8 @@ fn next_pw(s: impl AsRef<str>) -> String {
     }
 }
 
-fn to_bytes(s: impl AsRef<str>) -> Vec<u8> {
-    s.as_ref()
-        .as_bytes()
-        .iter()
-        .rev()
-        .map(|c| c - A_CHAR)
-        .collect()
+fn to_bytes(s: &str) -> Vec<u8> {
+    s.as_bytes().iter().rev().map(|c| c - A_CHAR).collect()
 }
 
 fn from_bytes(bytes: &Vec<u8>) -> String {

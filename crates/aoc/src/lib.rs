@@ -1,18 +1,22 @@
 use std::error::Error;
-use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::fs::{self, create_dir_all, rename, File};
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::time::Duration;
+use std::{fmt, io};
+
+pub mod input;
 
 pub mod s15;
+pub mod s24;
 
-type PuzzleResult<T> = Result<T, PuzzleError>;
-type AoCSolution = fn(u8, Box<dyn PuzzleInput>) -> PuzzleResult<bool>;
+pub type PuzzleResult<T> = Result<T, PuzzleError>;
+type AoCSolution = fn(&AocCache) -> PuzzleResult<bool>;
 
 #[derive(Debug)]
 pub enum PuzzleError {
+    IO { msg: String, error: io::Error },
     Input(String),
     Verification(String),
     Solution(String, Box<dyn Error>),
@@ -39,8 +43,8 @@ where
 {
     #[cfg(feature = "OnlyLastPuzzle")]
     {
-        if let Some((day, f)) = seq.into_iter().enumerate().last() {
-            verify((day + 1).try_into().unwrap(), f)?;
+        if let Some(f) = seq.into_iter().last() {
+            verify(f)?;
             Ok(())
         } else {
             Err(PuzzleError::Input("No puzzles available".into()))
@@ -49,28 +53,23 @@ where
 
     #[cfg(not(feature = "OnlyLastPuzzle"))]
     {
-        for (day, f) in seq.into_iter().enumerate() {
-            verify((day + 1).try_into().unwrap(), f)?;
+        for f in seq {
+            verify(f)?;
         }
 
         Ok(())
     }
 }
 
-fn verify(day: u8, f: AoCSolution) -> PuzzleResult<()> {
-    let cache = PuzzleCache::default();
-    let input = cache.get_input(2015, day).map_err(|e| {
-        PuzzleError::Input(format!("Failed to get input for 2015 day {day}: {e:?}"))
-    })?;
+fn verify(f: AoCSolution) -> PuzzleResult<()> {
+    let cache = AocCache::default();
 
     let start = std::time::Instant::now();
 
-    let result = match f(day, input) {
-        Ok(false) => Err(PuzzleError::Verification(format!(
-            "Verification for day {day} failed"
-        ))),
+    let result = match f(&cache) {
+        Ok(false) => Err(PuzzleError::Verification("Verification failed".to_string())),
         Err(err) => Err(PuzzleError::Solution(
-            format!("Execution of day {day} failed: {:?}", err),
+            format!("Execution failed: {:?}", err),
             err.into(),
         )),
         _ => Ok(()),
@@ -85,63 +84,21 @@ fn verify(day: u8, f: AoCSolution) -> PuzzleResult<()> {
     result
 }
 
-fn header(day: u8, title: impl AsRef<str>) {
-    println!();
-    println!("-- Day {}: {} ---", day, title.as_ref())
-}
-
-pub trait PuzzleInput {
-    fn input(&self) -> Result<BufReader<Box<dyn Read>>, PuzzleError>;
-
-    fn read_to_string(&self) -> Result<String, Box<dyn Error>> {
-        let mut reader = self.input()?; // Get the reader from the input
-        let mut content = String::new();
-        reader.read_to_string(&mut content)?; // Read all content to the string
-        Ok(content)
-    }
-
-    fn lines(&self) -> PuzzleResult<Box<dyn Iterator<Item = PuzzleResult<String>>>> {
-        let iterator = self.input()?.lines().map(|line| {
-            line.map_err(|e| {
-                PuzzleError::Processing(format!("Failed to read a line: {e}"), e.into())
-            })
-        });
-
-        Ok(Box::new(iterator))
+impl From<io::Error> for PuzzleError {
+    fn from(error: io::Error) -> Self {
+        PuzzleError::IO {
+            msg: "IO error occurred".to_string(),
+            error,
+        }
     }
 }
 
 #[derive(Debug)]
-pub struct PuzzleFileInput {
-    path: PathBuf,
-}
-
-impl PuzzleInput for PuzzleFileInput {
-    fn input(&self) -> PuzzleResult<BufReader<Box<dyn Read>>> {
-        let file = File::open(&self.path).map_err(|e| {
-            PuzzleError::Input(format!(
-                "Failed to open file at {}: {}",
-                self.path.display(),
-                e
-            ))
-        })?;
-
-        Ok(BufReader::new(Box::new(file)))
-    }
-}
-
-impl PuzzleFileInput {
-    fn new(path: PathBuf) -> PuzzleFileInput {
-        PuzzleFileInput { path }
-    }
-}
-
-#[derive(Debug)]
-pub struct PuzzleCache {
+pub struct AocCache {
     root: PathBuf,
 }
 
-impl Default for PuzzleCache {
+impl Default for AocCache {
     fn default() -> Self {
         Self {
             root: PathBuf::from("cache"),
@@ -149,7 +106,7 @@ impl Default for PuzzleCache {
     }
 }
 
-impl PuzzleCache {
+impl AocCache {
     fn get_session(&self) -> String {
         let path = self.root.join("session.txt");
         fs::read_to_string(path)
@@ -158,13 +115,13 @@ impl PuzzleCache {
             .to_string()
     }
 
-    pub fn get_input(&self, year: u16, day: u8) -> PuzzleResult<Box<dyn PuzzleInput>> {
+    pub fn get_path(&self, year: u16, day: u8) -> PuzzleResult<PathBuf> {
         let file_path = self.path(year, day);
         let tmp_file_path = format!("{}.tmp", file_path.display());
 
         // Check if the file already exists, return the stream from the file if it does
         if file_path.is_file() {
-            return Ok(Box::new(PuzzleFileInput::new(file_path)) as Box<dyn PuzzleInput>);
+            return Ok(file_path);
         }
 
         // If file doesn't exist, download it to the .tmp file
@@ -227,10 +184,35 @@ impl PuzzleCache {
             )
         })?;
 
-        Ok(Box::new(PuzzleFileInput::new(file_path)))
+        Ok(file_path)
     }
 
     fn path(&self, year: u16, day: u8) -> PathBuf {
-        self.root.join("aoc").join(format!("{}_{}.txt", year, day))
+        self.root
+            .join("aoc")
+            .join(format!("{}/{:02}.txt", year, day))
     }
+}
+
+#[derive(Debug)]
+pub struct Year(u16);
+
+impl Display for Year {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct Day(u8);
+
+impl Display for Day {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:02}", self.0)
+    }
+}
+
+fn head(year: Year, day: Day, title: &str) {
+    println!();
+    println!("-- Advent of Code {} Day {}: {} ---", year.0, day.0, title)
 }

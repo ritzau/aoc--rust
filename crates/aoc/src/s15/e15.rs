@@ -1,16 +1,18 @@
-use crate::{header, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleResult};
 use regex::Regex;
 use std::cmp::max;
-use std::ops::Deref;
 use std::sync::LazyLock;
 
-pub fn science_for_hungry_people(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
-    header(day, "Science for Hungry People");
+const DAY: Day = Day(15);
+
+pub fn science_for_hungry_people(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Science for Hungry People");
 
     let mut ingredients = Vec::<Ingredient>::new();
-    for line in input.lines()? {
-        let line = line?;
-        ingredients.push(Ingredient::parse(line));
+    for line in aoc.get_input(YEAR, DAY)?.lines() {
+        ingredients.push(Ingredient::parse(&line));
     }
 
     let max_score = get_max_score(&ingredients, false);
@@ -97,7 +99,7 @@ impl Ingredient {
         }
     }
 
-    fn parse(s: impl AsRef<str>) -> Ingredient {
+    fn parse(s: &str) -> Ingredient {
         let s = s.as_ref();
 
         if let Some(caps) = INGREDIENTS_REGEX.captures(s) {

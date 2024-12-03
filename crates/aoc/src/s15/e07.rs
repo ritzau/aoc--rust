@@ -1,16 +1,18 @@
+use crate::input::InputFetcher;
 use crate::s15::e07::Operand::{Value, Wire};
 use crate::s15::e07::Operation::{And, Forward, LShift, Not, Or, RShift};
-use crate::{header, PuzzleInput, PuzzleResult};
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleResult};
 use regex::{Match, Regex};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 
-pub fn some_assembly_required(
-    day: u8,
-    #[allow(unused_variables)] input: Box<dyn PuzzleInput>,
-) -> PuzzleResult<bool> {
-    header(day, "Some Assembly Required");
+const DAY: Day = Day(7);
+
+pub fn some_assembly_required(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Some Assembly Required");
+    let input = aoc.get_input(YEAR, DAY)?;
 
     #[cfg(feature = "EXCLUDE_SLOW_SOLUTIONS")]
     {
@@ -22,9 +24,9 @@ pub fn some_assembly_required(
     {
         let mut circuit = Circuit::new();
 
-        for line in input.lines()? {
-            let line = line?;
-            let gate = Gate::parse(line);
+        for line in input.lines() {
+            let line = line;
+            let gate = Gate::parse(&line);
             circuit.add_gate(gate);
         }
 
@@ -38,9 +40,9 @@ pub fn some_assembly_required(
 
         let mut circuit = Circuit::new();
 
-        for line in input.lines()? {
-            let line = line?;
-            let mut gate = Gate::parse(line);
+        for line in input.lines() {
+            let line = line;
+            let mut gate = Gate::parse(&line);
             if gate.operation == Forward && gate.output == "b" {
                 gate.inputs = vec![Value(a1)]
             }
@@ -105,7 +107,7 @@ impl Gate {
         }
     }
 
-    fn parse(s: impl AsRef<str>) -> Self {
+    fn parse(s: &str) -> Self {
         fn match_as_str(m: Option<Match>) -> &str {
             m.unwrap().as_str()
         }
@@ -207,8 +209,7 @@ impl Circuit {
         assert!(old.is_none());
     }
 
-    fn eval(&mut self, wire_id: impl AsRef<str>) -> Option<WireValue> {
-        let wire_id = wire_id.as_ref();
+    fn eval(&mut self, wire_id: &str) -> Option<WireValue> {
         if let Some(value) = self.wires.get(wire_id) {
             return Some(*value);
         }
@@ -217,7 +218,7 @@ impl Circuit {
         if let Some(gate) = gate {
             for input in &gate.inputs {
                 if let Wire(name) = input {
-                    self.eval(name.clone());
+                    self.eval(name);
                 }
             }
 

@@ -1,16 +1,18 @@
 use std::{collections::HashSet, iter};
 
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
 
-pub fn perfectly_spherical_houses_in_a_vacuum(
-    day: u8,
-    input: Box<dyn PuzzleInput>,
-) -> PuzzleResult<bool> {
-    header(day, "Perfectly Spherical Houses in a Vacuum");
+const DAY: Day = Day(3);
 
-    let input = input
+pub fn perfectly_spherical_houses_in_a_vacuum(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Perfectly Spherical Houses in a Vacuum");
+
+    let input = aoc
+        .get_input(YEAR, DAY)?
         .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {day}: {e}")))?;
+        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {DAY}: {e}")))?;
 
     let house_count = walk(&input);
     println!("aoc15e03a: {}", house_count);
@@ -21,22 +23,21 @@ pub fn perfectly_spherical_houses_in_a_vacuum(
     Ok(house_count == 2565 && robo_count == 2639)
 }
 
-fn walk(input: impl AsRef<str>) -> usize {
+fn walk(input: &str) -> usize {
     houses_visited(input).len()
 }
 
-fn walk_with_robo(input: impl AsRef<str>) -> usize {
+fn walk_with_robo(input: &str) -> usize {
     let (santa, robo) = split_work(input);
-    let santa_houses = houses_visited(santa);
-    let robo_houses = houses_visited(robo);
+    let santa_houses = houses_visited(&santa);
+    let robo_houses = houses_visited(&robo);
     santa_houses.union(&robo_houses).count()
 }
 
-fn houses_visited(input: impl AsRef<str>) -> HashSet<(i32, i32)> {
+fn houses_visited(input: &str) -> HashSet<(i32, i32)> {
     let start = (0, 0);
 
     input
-        .as_ref()
         .chars()
         .scan(start, |state, ch| {
             let (x, y) = state;
@@ -54,12 +55,8 @@ fn houses_visited(input: impl AsRef<str>) -> HashSet<(i32, i32)> {
         .collect()
 }
 
-fn split_work(input: impl AsRef<str>) -> (String, String) {
-    let (even, odd): (Vec<_>, _) = input
-        .as_ref()
-        .chars()
-        .enumerate()
-        .partition(|(i, _)| i % 2 == 0);
+fn split_work(input: &str) -> (String, String) {
+    let (even, odd): (Vec<_>, _) = input.chars().enumerate().partition(|(i, _)| i % 2 == 0);
 
     let to_string = |vec: Vec<(usize, char)>| vec.into_iter().map(|(_, c)| c).collect::<String>();
     (to_string(even), to_string(odd))

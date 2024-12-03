@@ -1,23 +1,30 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::{InputFetcher, Lines};
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
 use itertools::Itertools;
 use std::cmp::max;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-pub fn knights_of_the_dinner_table(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
-    header(day, "Knights of the Dinner Table");
+const DAY: Day = Day(13);
 
-    let p1 = part_1b(input.lines()?)?;
-    let p2 = part_2b(input.lines()?)?;
+pub fn knights_of_the_dinner_table(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Knights of the Dinner Table");
+    let input = aoc.get_input(YEAR, DAY)?;
+
+    let p1 = part_1b(input.lines())?;
+    let p2 = part_2b(input.lines())?;
 
     Ok(p1 == 618 && p2 == 601)
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 struct StaticStrings {
     set: HashSet<Box<str>>,
 }
 
+#[allow(dead_code)]
 impl StaticStrings {
     fn new<T>(strings: T) -> Self
     where
@@ -28,8 +35,8 @@ impl StaticStrings {
         Self { set }
     }
 
-    fn get(&self, s: impl AsRef<str>) -> Option<&str> {
-        self.set.get(s.as_ref()).map(|b| b.as_ref())
+    fn get(&self, s: &str) -> Option<&str> {
+        self.set.get(s).map(|b| b.as_ref())
     }
 }
 
@@ -45,6 +52,7 @@ impl DynamicStrings {
         }
     }
 
+    #[allow(dead_code)]
     fn from<T>(strings: T) -> Self
     where
         T: IntoIterator,
@@ -54,9 +62,9 @@ impl DynamicStrings {
         Self { set }
     }
 
-    fn get(&mut self, s: impl AsRef<str>) -> Rc<str> {
-        if self.set.contains(s.as_ref()) {
-            self.set.get(s.as_ref()).unwrap().clone()
+    fn get(&mut self, s: &str) -> Rc<str> {
+        if self.set.contains(s) {
+            self.set.get(s).unwrap().clone()
         } else {
             let rc: Rc<str> = Rc::from(s.as_ref());
             self.set.insert(rc.clone());
@@ -65,6 +73,7 @@ impl DynamicStrings {
     }
 }
 
+#[allow(dead_code)]
 fn part_1(lines: Box<dyn Iterator<Item = PuzzleResult<String>>>) -> PuzzleResult<i64> {
     let entries = parse_entries(lines)?;
     let strings = get_strings(&entries);
@@ -90,7 +99,8 @@ fn part_1(lines: Box<dyn Iterator<Item = PuzzleResult<String>>>) -> PuzzleResult
 
     Ok(optimal)
 }
-fn part_1b(lines: Box<dyn Iterator<Item = PuzzleResult<String>>>) -> PuzzleResult<i64> {
+
+fn part_1b(lines: Lines) -> PuzzleResult<i64> {
     let mut strings = DynamicStrings::new();
     let entries = parse_entries_b(&mut strings, lines)?;
     let (mut peeps, pairs) = parse_b(&entries)?;
@@ -118,6 +128,7 @@ fn part_1b(lines: Box<dyn Iterator<Item = PuzzleResult<String>>>) -> PuzzleResul
     Ok(optimal)
 }
 
+#[allow(dead_code)]
 fn part_2(lines: Box<dyn Iterator<Item = PuzzleResult<String>>>) -> PuzzleResult<i64> {
     let entries = parse_entries(lines)?;
     let strings = get_strings(&entries);
@@ -132,7 +143,7 @@ fn part_2(lines: Box<dyn Iterator<Item = PuzzleResult<String>>>) -> PuzzleResult
     Ok(optimal)
 }
 
-fn part_2b(lines: Box<dyn Iterator<Item = PuzzleResult<String>>>) -> PuzzleResult<i64> {
+fn part_2b(lines: Lines) -> PuzzleResult<i64> {
     let mut strings = DynamicStrings::new();
     let entries = parse_entries_b(&mut strings, lines)?;
     let (peeps, pairs) = parse_b(&entries)?;
@@ -161,16 +172,16 @@ fn sum_happiness_b(pairs: &HashMap<(Rc<str>, Rc<str>), i64>, v: Vec<Rc<str>>) ->
 fn parse_entries(
     lines: Box<dyn Iterator<Item = PuzzleResult<String>>>,
 ) -> PuzzleResult<Vec<((String, String), i64)>> {
-    Ok(lines.map(|e| parse_line(e.unwrap()).unwrap()).collect())
+    Ok(lines.map(|e| parse_line(&e.unwrap()).unwrap()).collect())
 }
 
 fn parse_entries_b(
     strings: &mut DynamicStrings,
-    lines: Box<dyn Iterator<Item = PuzzleResult<String>>>,
+    lines: Lines,
 ) -> PuzzleResult<Vec<((Rc<str>, Rc<str>), i64)>> {
     let entries = lines
         .map(|e| {
-            let ((p1, p2), happiness) = parse_line(e.unwrap()).unwrap();
+            let ((p1, p2), happiness) = parse_line(&e).unwrap();
             (
                 (strings.get(p1.as_str()), strings.get(p2.as_str())),
                 happiness,
@@ -235,8 +246,8 @@ fn parse_b(
     Ok((peeps, pairs))
 }
 
-fn parse_line(s: impl AsRef<str>) -> PuzzleResult<((String, String), i64)> {
-    let ws: Vec<_> = s.as_ref().split_whitespace().collect();
+fn parse_line(s: &str) -> PuzzleResult<((String, String), i64)> {
+    let ws: Vec<_> = s.split_whitespace().collect();
     let name_1 = ws[0];
     let lose_gain = ws[2];
     let sign = match lose_gain {

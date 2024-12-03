@@ -1,9 +1,14 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
 
-pub fn elves_look_elves_say(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
-    header(day, "Elves Look, Elves Say");
+const DAY: Day = Day(10);
 
-    let mut input = input
+pub fn elves_look_elves_say(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Elves Look, Elves Say");
+
+    let mut input = aoc
+        .get_input(YEAR, DAY)?
         .read_to_string()
         .map_err(|_| PuzzleError::Input("foo".into()))?
         .trim()
@@ -26,9 +31,9 @@ pub fn elves_look_elves_say(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResul
     Ok(len_40 == 360154 && len_50 == 5103798)
 }
 
-fn look_say(s: impl AsRef<str>) -> PuzzleResult<String> {
+fn look_say(s: &str) -> PuzzleResult<String> {
     let mut result = String::new();
-    let mut chars = s.as_ref().chars();
+    let mut chars = s.chars();
     let mut count = 1;
     let mut prev_char = chars.next().unwrap();
 

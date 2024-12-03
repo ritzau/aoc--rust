@@ -1,11 +1,13 @@
-use crate::{header, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleResult};
 use fancy_regex::Regex;
 
-pub fn probably_a_fire_hazard(
-    day: u8,
-    #[allow(unused_variables)] input: Box<dyn PuzzleInput>,
-) -> PuzzleResult<bool> {
-    header(day, "Probably a Fire Hazard");
+const DAY: Day = Day(6);
+
+pub fn probably_a_fire_hazard(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Probably a Fire Hazard");
+    let input = aoc.get_input(YEAR, DAY)?;
 
     #[cfg(feature = "EXCLUDE_SLOW_SOLUTIONS")]
     {
@@ -17,8 +19,8 @@ pub fn probably_a_fire_hazard(
     {
         let mut grid = LightGrid::new();
 
-        for line in input.lines()? {
-            let instruction = Instruction::parse(line?);
+        for line in input.lines() {
+            let instruction = Instruction::parse(&line);
             match instruction {
                 Instruction::TurnOn(tl, br) => grid.turn_on(tl, br),
                 Instruction::TurnOff(tl, br) => grid.turn_off(tl, br),
@@ -31,8 +33,8 @@ pub fn probably_a_fire_hazard(
 
         let mut grid = LightGrid2::new();
 
-        for line in input.lines()? {
-            let instruction = Instruction::parse(line?);
+        for line in input.lines() {
+            let instruction = Instruction::parse(&line);
             match instruction {
                 Instruction::TurnOn(tl, br) => grid.turn_on(tl, br),
                 Instruction::TurnOff(tl, br) => grid.turn_off(tl, br),
@@ -56,7 +58,7 @@ enum Instruction {
 }
 
 impl Instruction {
-    fn parse(s: impl AsRef<str>) -> Instruction {
+    fn parse(s: &str) -> Instruction {
         // turn on 0,0 through 999,999
         // toggle 0,0 through 999,0
         // turn off 499,499 through 500,500

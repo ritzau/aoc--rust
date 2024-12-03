@@ -1,13 +1,18 @@
-use crate::{header, PuzzleError, PuzzleInput, PuzzleResult};
+use crate::input::InputFetcher;
+use crate::s15::YEAR;
+use crate::{head, AocCache, Day, PuzzleError, PuzzleResult};
 use itertools::Itertools;
 use regex::Regex;
 use std::cmp::max;
 use std::collections::HashMap;
 
-pub fn reindeer_olympics(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<bool> {
-    header(day, "Reindeer Olympics");
+const DAY: Day = Day(14);
 
-    let input = input
+pub fn reindeer_olympics(aoc: &AocCache) -> PuzzleResult<bool> {
+    head(YEAR, DAY, "Reindeer Olympics");
+
+    let input = aoc
+        .get_input(YEAR, DAY)?
         .read_to_string()
         .map_err(|e| PuzzleError::Input(format!("Input error: {e}")))?;
 
@@ -20,9 +25,8 @@ pub fn reindeer_olympics(day: u8, input: Box<dyn PuzzleInput>) -> PuzzleResult<b
     Ok(max_distance == 2696 && score == 1084)
 }
 
-fn part_1(input: impl AsRef<str>) -> PuzzleResult<u32> {
+fn part_1(input: &str) -> PuzzleResult<u32> {
     let max_distance = input
-        .as_ref()
         .lines()
         .map(|line| Reindeer::from(line))
         .map(|reindeer| reindeer.distance_after(2503))
@@ -31,9 +35,8 @@ fn part_1(input: impl AsRef<str>) -> PuzzleResult<u32> {
     Ok(max_distance)
 }
 
-fn part_2(input: impl AsRef<str>) -> PuzzleResult<u32> {
+fn part_2(input: &str) -> PuzzleResult<u32> {
     let reindeers = input
-        .as_ref()
         .lines()
         .map(|line| Reindeer::from(line))
         .collect::<Vec<_>>();
@@ -79,7 +82,7 @@ impl Reindeer {
         }
     }
 
-    fn from(s: impl AsRef<str>) -> Self {
+    fn from(s: &str) -> Self {
         let s = s.as_ref();
         let pattern = Regex::new(
             r"(\w+) can fly (\d+) km/s for (\d+) seconds, but then must rest for (\d+) seconds.",
