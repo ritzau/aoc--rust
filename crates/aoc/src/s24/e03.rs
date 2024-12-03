@@ -41,13 +41,7 @@ fn part2(input: &str) -> PuzzleResult<i32> {
         .fold((true, 0), |(enabled, sum), m| match m.as_str() {
             "do()" => (true, sum),
             "don't()" => (false, sum),
-            _ => {
-                if enabled {
-                    (enabled, sum + multiply(m.as_str()))
-                } else {
-                    (enabled, sum)
-                }
-            }
+            op => (enabled, sum + if enabled { multiply(op) } else { 0 }),
         });
 
     Ok(sum)
