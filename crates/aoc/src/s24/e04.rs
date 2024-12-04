@@ -41,15 +41,15 @@ fn part1(lines: Lines) -> PuzzleResult<i32> {
     }
 
     for col in -n..n {
-        let s: String = (col..n)
-            .filter(|c| (0..n).contains(&c) && (0..n).contains(&(c - col)))
+        let start = col.max(0);
+        let end = n.min(n + col);
+        let s: String = (start..end)
             .map(|c| matrix[(c - col) as usize][c as usize])
             .collect();
         count += count_matches(SEARCH, &rev_search, s);
 
-        let s: String = (col..n)
-            .filter(|c| (0..n).contains(&c) && (0..n).contains(&(c - col)))
-            .map(|c| matrix[(n - (c - col) - 1) as usize][c as usize])
+        let s: String = (start..end)
+            .map(|c| matrix[(n - 1 - (c - col)) as usize][c as usize])
             .collect();
         count += count_matches(SEARCH, &rev_search, s);
     }
