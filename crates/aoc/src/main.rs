@@ -25,8 +25,15 @@ fn setup_log() {
 }
 
 fn go_nuts(old_stuff: bool) -> aoc::PuzzleResult<()> {
+    let start = std::time::Instant::now();
+
     if old_stuff {
         s15::solve()?;
     }
-    s24::solve()
+    s24::solve()?;
+
+    let elapsed = start.elapsed();
+    println!("\nTotal duration: {:?}", elapsed);
+
+    Ok(())
 }
