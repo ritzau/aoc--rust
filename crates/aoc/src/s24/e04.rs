@@ -35,13 +35,13 @@ fn part1(lines: Lines) -> PuzzleResult<usize> {
 
 fn part2(lines: Lines) -> PuzzleResult<usize> {
     let matrix: Vec<Vec<char>> = lines.map(|line| line.chars().collect()).collect();
-    let down_right_coords = diagonal_iterator(down_right_diagonals(&matrix));
-    let up_right_coords = diagonal_iterator(up_right_diagonals(&matrix));
+    let down_right_coords = diagonal_coords(down_right_diagonals(&matrix));
+    let up_right_coords = diagonal_coords(up_right_diagonals(&matrix));
 
     Ok(down_right_coords.intersection(&up_right_coords).count())
 }
 
-fn diagonal_iterator(iterator: DiagonalIterator) -> HashSet<(usize, usize)> {
+fn diagonal_coords(iterator: DiagonalIterator) -> HashSet<(usize, usize)> {
     const SEARCH: &str = "MAS";
     const REV_SEARCH: &str = "SAM";
 
