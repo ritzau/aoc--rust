@@ -6,13 +6,14 @@ pub mod e01;
 pub mod e02;
 pub mod e03;
 pub mod e04;
+pub mod e05;
 
 const YEAR: Year = Year(2024);
 
 type AoCSolution = fn(&AocCache) -> PuzzleResult<()>;
 
 pub fn solve() -> PuzzleResult<()> {
-    run(&[e01::solve, e02::solve, e03::solve, e04::solve])
+    run(&[e01::solve, e02::solve, e03::solve, e04::solve, e05::solve])
 }
 
 fn run(seq: &[AoCSolution]) -> PuzzleResult<()> {
