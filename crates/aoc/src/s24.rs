@@ -2,18 +2,27 @@ use crate::cache::AocCache;
 use crate::{PuzzleError, PuzzleResult, Year};
 use std::time::Duration;
 
-pub mod e01;
-pub mod e02;
-pub mod e03;
-pub mod e04;
-pub mod e05;
+mod e00;
+mod e01;
+mod e02;
+mod e03;
+mod e04;
+mod e05;
+mod e06;
 
 const YEAR: Year = Year(2024);
 
 type AoCSolution = fn(&AocCache) -> PuzzleResult<()>;
 
 pub fn solve() -> PuzzleResult<()> {
-    run(&[e01::solve, e02::solve, e03::solve, e04::solve, e05::solve])
+    run(&[
+        e01::solve,
+        e02::solve,
+        e03::solve,
+        e04::solve,
+        e05::solve,
+        e06::solve,
+    ])
 }
 
 fn run(seq: &[AoCSolution]) -> PuzzleResult<()> {
