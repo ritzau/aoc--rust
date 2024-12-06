@@ -3,7 +3,7 @@ use crate::input::InputFetcher;
 use crate::s24::YEAR;
 use crate::{head, Day, PuzzleResult};
 use itertools::Itertools;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::thread;
 use std::time::Duration;
 
@@ -50,82 +50,49 @@ fn part1(input: &str) -> PuzzleResult<usize> {
 }
 
 fn part2(input: &str) -> PuzzleResult<usize> {
-    let (start, map) = parse(input);
-    let ps: HashSet<_> = StepIterator::new(&map, start).map(|(p, _)| p).collect();
+    let (start, mut map) = parse(input);
+    let path: Vec<_> = StepIterator::new(&map, start).collect();
 
-    let count = ps
+    let mut step_map = BTreeMap::<(i32, i32), usize>::new();
+    for (i, &(p, _)) in path.iter().enumerate() {
+        step_map.entry(p).or_insert(i);
+    }
+
+    let count = path
         .iter()
-        .filter(|&&pos| pos != start)
-        .map(|&pos| {
-            let mut map = map.clone();
-            let (r, c) = pos;
-            map[r as usize][c as usize] = '#';
-            let mut it = StepIterator::new(&map, start);
+        .filter_map(|&(pos, _)| {
+            if pos == start {
+                return None;
+            }
+
+            let r = pos.0 as usize;
+            let c = pos.1 as usize;
+
+            let save = map[r][c];
+            map[r][c] = '#';
+
+            // steps > 0 since start is filtered out
+            let step = step_map[&pos]; // path.iter().position(|&(p, _)| p == pos).unwrap();
+            let history = &path[..step - 1];
+            let (start, dir) = path[step - 1];
+            let mut it = StepIterator::from_state(&map, start, dir, history);
+            // Drain the iterator
             it.by_ref().for_each(drop);
-            if it.is_valid() {
+            let is_loop = it.is_valid();
+
+            // Restore the map
+            map[r][c] = save;
+
+            if is_loop {
                 Some(pos)
             } else {
                 None
             }
         })
-        .filter(Option::is_some)
+        .unique()
         .count();
 
     Ok(count)
-}
-
-#[allow(dead_code)]
-fn animate(map: &Vec<Vec<char>>, start: (i32, i32)) {
-    let ps: Vec<_> = StepIterator::new(&map, start).map(|(p, _)| p).collect();
-    println!(
-        "{}",
-        map.iter().map(|r| r.iter().collect::<String>()).join("\n")
-    );
-
-    let mut count = 0;
-    let mut marks = Vec::<(i32, i32)>::new();
-    for (r, c) in &ps {
-        marks.push((*r, *c));
-        while marks.len() > 200 {
-            marks.remove(0);
-        }
-
-        let mut map = map.clone();
-        for (r, c) in &marks {
-            map[*r as usize][*c as usize] = 'X';
-        }
-
-        if count % 10 == 0 {
-            print!("\x1B[2J\x1B[1;1H");
-            println!(
-                "{}",
-                map.iter()
-                    .map(|r| r
-                        .iter()
-                        .map(|&c| match c {
-                            '.' => ' ',
-                            _ => c,
-                        })
-                        .map(|c| format!("{} ", c))
-                        .collect::<String>())
-                    .join("\n")
-            );
-            thread::sleep(Duration::from_millis(20));
-        }
-        count += 1;
-    }
-
-    {
-        let mut map = map.clone();
-        for (r, c) in &marks {
-            map[*r as usize][*c as usize] = 'X';
-        }
-        print!("\x1B[2J\x1B[1;1H");
-        println!(
-            "{}",
-            map.iter().map(|r| r.iter().collect::<String>()).join("\n")
-        );
-    }
 }
 
 struct StepIterator<'a> {
@@ -147,12 +114,64 @@ impl<'a> StepIterator<'a> {
         }
     }
 
+    fn from_state(
+        map: &'a Vec<Vec<char>>,
+        pos: (i32, i32),
+        dir: Direction,
+        history: &[((i32, i32), Direction)],
+    ) -> Self {
+        Self {
+            map,
+            pos,
+            dir,
+            first: false,
+            history: history.iter().copied().collect(),
+        }
+    }
+
     fn valid(&self, r: i32, c: i32) -> bool {
         (0..(self.map.len() as i32)).contains(&r) && (0..(self.map[0].len() as i32)).contains(&c)
     }
 
     fn is_valid(&self) -> bool {
         self.valid(self.pos.0, self.pos.1)
+    }
+
+    #[allow(dead_code)]
+    fn animate(&mut self) {
+        let ps: Vec<_> = self.map(|(p, _)| p).collect();
+        let is_loop = self.is_valid();
+
+        print_map(&self.map);
+
+        let mut count = 0;
+        let mut marks = Vec::<(i32, i32)>::new();
+        for (r, c) in &ps {
+            marks.push((*r, *c));
+            while marks.len() > 5 {
+                marks.remove(0);
+            }
+
+            let mut map = self.map.clone();
+            for ((r, c), d) in &self.history {
+                map[*r as usize][*c as usize] = match d {
+                    Direction::North => '^',
+                    Direction::East => '>',
+                    Direction::South => 'v',
+                    Direction::West => '<',
+                };
+            }
+            for (r, c) in &marks {
+                map[*r as usize][*c as usize] = if is_loop { '*' } else { 'X' };
+            }
+
+            if count % 10 >= 0 {
+                print!("\x1B[2J\x1B[1;1H");
+                print_map(&map);
+                thread::sleep(Duration::from_millis(10));
+            }
+            count += 1;
+        }
     }
 }
 
@@ -213,6 +232,23 @@ fn parse(input: &str) -> ((i32, i32), Vec<Vec<char>>) {
         .unwrap();
 
     (start, map)
+}
+
+#[allow(dead_code)]
+fn print_map(map: &Vec<Vec<char>>) {
+    println!(
+        "{}",
+        map.iter()
+            .map(|r| r
+                .iter()
+                .map(|&c| match c {
+                    '.' => ' ',
+                    _ => c,
+                })
+                .map(|c| format!("{} ", c))
+                .collect::<String>())
+            .join("\n")
+    );
 }
 
 #[cfg(test)]
