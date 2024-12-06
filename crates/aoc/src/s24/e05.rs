@@ -3,7 +3,7 @@ use crate::input::{InputFetcher, Lines};
 use crate::s24::YEAR;
 use crate::{head, Day, PuzzleResult};
 use std::cmp::Ordering;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::HashSet;
 
 const DAY: Day = Day(5);
 
@@ -59,26 +59,18 @@ fn part2(lines: Lines) -> PuzzleResult<i32> {
 fn parse(lines: Lines) -> Input {
     let lines: Vec<_> = lines.collect();
     let sections: Vec<_> = lines.split(|line| line.is_empty()).collect();
-    assert_eq!(sections.len(), 2);
-    let ordering = sections[0];
-    let updates = sections[1];
 
-    let ordering = ordering
+    let ordering: CompareSet = sections[0]
         .iter()
         .map(|line| {
-            let parts: Vec<_> = line.split('|').collect();
-            assert_eq!(parts.len(), 2);
-            let first: i32 = parts[0].parse().unwrap();
-            let second: i32 = parts[1].parse().unwrap();
+            let (first, second) = line.split_once('|').unwrap();
+            let first: i32 = first.parse().unwrap();
+            let second: i32 = second.parse().unwrap();
             (first, second)
         })
-        .fold(HashMap::new(), |mut acc, (key, value)| {
-            acc.entry(key).or_insert_with(Vec::new).push(value);
-            acc
-        });
-    let ordering = optimize(ordering);
+        .collect();
 
-    let updates: Vec<_> = updates
+    let updates: Vec<_> = sections[1]
         .iter()
         .map(|line| line.split(',').map(|page| page.parse().unwrap()).collect())
         .collect();
@@ -86,10 +78,10 @@ fn parse(lines: Lines) -> Input {
     Input { updates, ordering }
 }
 
-fn pair_compare(cmp: &CompareSet, scope: &BTreeSet<Page>, a: &Page, b: &Page) -> Ordering {
+fn pair_compare(cmp: &CompareSet, a: &Page, b: &Page) -> Ordering {
     if a == b {
         Ordering::Equal
-    } else if cmp.contains(&(*a, *b)) && scope.contains(a) && scope.contains(b) {
+    } else if cmp.contains(&(*a, *b)) {
         Ordering::Less
     } else {
         Ordering::Greater
@@ -97,45 +89,13 @@ fn pair_compare(cmp: &CompareSet, scope: &BTreeSet<Page>, a: &Page, b: &Page) ->
 }
 
 fn is_sorted(ordering: &CompareSet, update: &Update) -> bool {
-    let scope = update.iter().copied().collect();
-    update.is_sorted_by(|a, b| pair_compare(&ordering, &scope, a, b) == Ordering::Less)
+    update.is_sorted_by(|a, b| pair_compare(&ordering, a, b) == Ordering::Less)
 }
 
 fn sorted(ordering: &CompareSet, update: &Update) -> Update {
-    let scope = update.iter().copied().collect();
     let mut pages = update.clone();
-    pages.sort_by(|a, b| pair_compare(&ordering, &scope, a, b));
+    pages.sort_by(|a, b| pair_compare(&ordering, a, b));
     pages
-}
-
-fn optimize(ordering: HashMap<Page, Vec<Page>>) -> CompareSet {
-    ordering
-        .keys()
-        .map(|&page| traverse(&ordering, page))
-        .flatten()
-        .collect()
-}
-
-fn traverse(ordering: &HashMap<Page, Vec<Page>>, page: Page) -> CompareSet {
-    let mut stack = vec![page];
-    let mut visited = HashSet::new();
-    let mut result = CompareSet::new();
-
-    while let Some(current_page) = stack.pop() {
-        if visited.contains(&current_page) {
-            continue;
-        }
-        visited.insert(current_page);
-
-        if let Some(comes_after) = ordering.get(&current_page) {
-            for &after in comes_after {
-                result.insert((current_page, after));
-                stack.push(after);
-            }
-        }
-    }
-
-    result
 }
 
 #[cfg(test)]
