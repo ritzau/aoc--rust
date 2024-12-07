@@ -2,12 +2,17 @@ use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s24::YEAR;
 use crate::{head, Day, PuzzleResult};
+use fxhash::{FxHashMap, FxHashSet};
 use itertools::Itertools;
-use std::collections::{BTreeMap, HashSet};
+use rayon::iter::IntoParallelRefIterator;
+use rayon::prelude::*;
 use std::thread;
 use std::time::Duration;
 
 const DAY: Day = Day(6);
+
+type Map<K, V> = FxHashMap<K, V>;
+type Set<T> = FxHashSet<T>;
 
 pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
     head(YEAR, DAY, "Guard Gallivant");
@@ -45,21 +50,22 @@ impl Direction {
 
 fn part1(input: &str) -> PuzzleResult<usize> {
     let (start, map) = parse(input);
-    let ps: HashSet<_> = StepIterator::new(&map, start).map(|(p, _)| p).collect();
+    let ps: Set<_> = StepIterator::new(&map, start).map(|(p, _)| p).collect();
     Ok(ps.len())
 }
 
 fn part2(input: &str) -> PuzzleResult<usize> {
-    let (start, mut map) = parse(input);
+    let (start, map) = parse(input);
     let path: Vec<_> = StepIterator::new(&map, start).collect();
 
-    let mut step_map = BTreeMap::<(i32, i32), usize>::new();
+    let mut step_map = Map::<(i32, i32), usize>::default();
     for (i, &(p, _)) in path.iter().enumerate() {
         step_map.entry(p).or_insert(i);
     }
 
     let count = path
-        .iter()
+        .clone()
+        .par_iter()
         .filter_map(|&(pos, _)| {
             if pos == start {
                 return None;
@@ -68,6 +74,7 @@ fn part2(input: &str) -> PuzzleResult<usize> {
             let r = pos.0 as usize;
             let c = pos.1 as usize;
 
+            let mut map = map.clone();
             let save = map[r][c];
             map[r][c] = '#';
 
@@ -89,8 +96,8 @@ fn part2(input: &str) -> PuzzleResult<usize> {
                 None
             }
         })
-        .unique()
-        .count();
+        .collect::<Set<_>>()
+        .len();
 
     Ok(count)
 }
@@ -100,7 +107,7 @@ struct StepIterator<'a> {
     pos: (i32, i32),
     dir: Direction,
     first: bool,
-    history: HashSet<((i32, i32), Direction)>,
+    history: Set<((i32, i32), Direction)>,
 }
 
 impl<'a> StepIterator<'a> {
@@ -110,7 +117,7 @@ impl<'a> StepIterator<'a> {
             pos,
             dir: Direction::North,
             first: true,
-            history: HashSet::new(),
+            history: Set::default(),
         }
     }
 
