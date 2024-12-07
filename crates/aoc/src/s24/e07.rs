@@ -32,17 +32,15 @@ enum Operator {
 }
 
 fn part1(input: &Input) -> PuzzleResult<Value> {
-    let input = parse(input.lines()?)?;
     Ok(sum_valid_calibrations(
-        input,
+        parse(input.lines()?)?,
         &[Operator::Add, Operator::Mul],
     ))
 }
 
 fn part2(input: &Input) -> PuzzleResult<i64> {
-    let input = parse(input.lines()?)?;
     Ok(sum_valid_calibrations(
-        input,
+        parse(input.lines()?)?,
         &[Operator::Add, Operator::Mul, Operator::Concat],
     ))
 }
