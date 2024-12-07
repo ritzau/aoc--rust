@@ -2,7 +2,7 @@ use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s24::YEAR;
 use crate::{head, Day, PuzzleResult};
-use fxhash::{FxHashMap, FxHashSet};
+use fxhash::FxHashSet;
 use itertools::Itertools;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::prelude::*;
@@ -11,7 +11,6 @@ use std::time::Duration;
 
 const DAY: Day = Day(6);
 
-type Map<K, V> = FxHashMap<K, V>;
 type Set<T> = FxHashSet<T>;
 
 pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
@@ -58,48 +57,30 @@ fn part2(input: &str) -> PuzzleResult<usize> {
     let (start, map) = parse(input);
     let path: Vec<_> = StepIterator::new(&map, start).collect();
 
-    let mut step_map = Map::<(i32, i32), usize>::default();
-    for (i, &(p, _)) in path.iter().enumerate() {
-        step_map.entry(p).or_insert(i);
-    }
-
     let count = path
-        .clone()
         .par_iter()
-        .filter_map(|&(pos, _)| {
-            if pos == start {
-                return None;
-            }
-
-            let r = pos.0 as usize;
-            let c = pos.1 as usize;
-
-            let mut map = map.clone();
-            let save = map[r][c];
-            map[r][c] = '#';
-
-            // steps > 0 since start is filtered out
-            let step = step_map[&pos]; // path.iter().position(|&(p, _)| p == pos).unwrap();
-            let history = &path[..step - 1];
-            let (start, dir) = path[step - 1];
-            let mut it = StepIterator::from_state(&map, start, dir, history);
-            // Drain the iterator
-            it.by_ref().for_each(drop);
-            let is_loop = it.is_valid();
-
-            // Restore the map
-            map[r][c] = save;
-
-            if is_loop {
-                Some(pos)
-            } else {
-                None
-            }
-        })
+        .map(|&(pos, _)| pos)
+        .filter(|&pos| pos != start && creates_loop(&map, &path, pos))
         .collect::<Set<_>>()
         .len();
 
     Ok(count)
+}
+
+fn creates_loop(
+    map: &Vec<Vec<char>>,
+    path: &Vec<((i32, i32), Direction)>,
+    pos: (i32, i32),
+) -> bool {
+    // Restart just before first hitting the new obstacle
+    // steps > 0 since start is filtered out
+    let step = path.iter().position(|&(p, _)| p == pos).unwrap();
+    let history = &path[..step - 1];
+    let (start, dir) = path[step - 1];
+    let mut it = StepIterator::from_state(&map, start, dir, history, Some((pos.0, pos.1)));
+    // Drain the iterator
+    it.by_ref().for_each(drop);
+    it.is_valid()
 }
 
 struct StepIterator<'a> {
@@ -108,6 +89,7 @@ struct StepIterator<'a> {
     dir: Direction,
     first: bool,
     history: Set<((i32, i32), Direction)>,
+    extra_obstacle: Option<(i32, i32)>,
 }
 
 impl<'a> StepIterator<'a> {
@@ -118,6 +100,7 @@ impl<'a> StepIterator<'a> {
             dir: Direction::North,
             first: true,
             history: Set::default(),
+            extra_obstacle: None,
         }
     }
 
@@ -126,6 +109,7 @@ impl<'a> StepIterator<'a> {
         pos: (i32, i32),
         dir: Direction,
         history: &[((i32, i32), Direction)],
+        extra_obstacle: Option<(i32, i32)>,
     ) -> Self {
         Self {
             map,
@@ -133,6 +117,7 @@ impl<'a> StepIterator<'a> {
             dir,
             first: false,
             history: history.iter().copied().collect(),
+            extra_obstacle,
         }
     }
 
@@ -186,8 +171,6 @@ impl<'a> Iterator for StepIterator<'a> {
     type Item = ((i32, i32), Direction);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (r, c) = self.pos;
-
         if self.first {
             self.first = false;
             return Some((self.pos, self.dir));
@@ -199,27 +182,32 @@ impl<'a> Iterator for StepIterator<'a> {
 
         self.history.insert((self.pos, self.dir));
 
+        let (r, c) = self.pos;
         if !self.valid(r, c) {
-            None
-        } else {
-            let (next_r, next_c) = match self.dir {
-                Direction::North => (r - 1, c),
-                Direction::East => (r, c + 1),
-                Direction::South => (r + 1, c),
-                Direction::West => (r, c - 1),
-            };
-
-            if !self.valid(next_r, next_c) {
-                self.pos = (next_r, next_c);
-                None
-            } else if self.map[next_r as usize][next_c as usize] == '#' {
-                self.dir = self.dir.turn();
-                self.next()
-            } else {
-                self.pos = (next_r, next_c);
-                Some((self.pos, self.dir))
-            }
+            return None;
         }
+
+        let (next_r, next_c) = match self.dir {
+            Direction::North => (r - 1, c),
+            Direction::East => (r, c + 1),
+            Direction::South => (r + 1, c),
+            Direction::West => (r, c - 1),
+        };
+
+        if !self.valid(next_r, next_c) {
+            self.pos = (next_r, next_c);
+            return None;
+        }
+
+        if (self.extra_obstacle == Some((next_r, next_c)))
+            || self.map[next_r as usize][next_c as usize] == '#'
+        {
+            self.dir = self.dir.turn();
+            return self.next();
+        }
+
+        self.pos = (next_r, next_c);
+        Some((self.pos, self.dir))
     }
 }
 
