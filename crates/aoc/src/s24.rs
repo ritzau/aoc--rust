@@ -9,6 +9,7 @@ mod e03;
 mod e04;
 mod e05;
 mod e06;
+mod e07;
 
 const YEAR: Year = Year(2024);
 
@@ -22,6 +23,7 @@ pub fn solve() -> PuzzleResult<()> {
         e04::solve,
         e05::solve,
         e06::solve,
+        e07::solve,
     ])
 }
 

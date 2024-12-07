@@ -47,6 +47,14 @@ impl<'a> Input<'a> {
     }
 }
 
+impl<'a> From<&'a str> for Input<'a> {
+    fn from(string: &'a str) -> Self {
+        Input {
+            implementation: Source::String(string),
+        }
+    }
+}
+
 pub struct Lines<'a> {
     implementation: LinesIteratorImpl<'a>,
 }
