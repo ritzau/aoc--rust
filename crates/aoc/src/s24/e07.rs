@@ -24,85 +24,67 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
 
 type Value = i64;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 enum Operator {
     Add,
     Mul,
     Concat,
 }
 
-impl Operator {
-    fn original_values() -> [Operator; 2] {
-        [Operator::Add, Operator::Mul]
-    }
-
-    fn values() -> [Operator; 3] {
-        [Operator::Add, Operator::Mul, Operator::Concat]
-    }
-}
 fn part1(input: &Input) -> PuzzleResult<Value> {
     let input = parse(input.lines()?)?;
-
-    let sum = input
-        .into_par_iter()
-        .filter_map(|(result, values)| {
-            generate_mutations(&Operator::original_values(), values.len() - 1)
-                .find(|op| eval(&values, op, result) == Some(result))
-                .map(|_| result)
-        })
-        .sum();
-
-    Ok(sum)
+    Ok(sum_valid_calibrations(
+        input,
+        &[Operator::Add, Operator::Mul],
+    ))
 }
 
 fn part2(input: &Input) -> PuzzleResult<i64> {
     let input = parse(input.lines()?)?;
-
-    let sum = input
-        .into_par_iter()
-        .filter_map(|(result, values)| {
-            generate_mutations(&Operator::values(), values.len() - 1)
-                .find(|op| eval(&values, op, result) == Some(result))
-                .map(|_| result)
-        })
-        .sum();
-
-    Ok(sum)
+    Ok(sum_valid_calibrations(
+        input,
+        &[Operator::Add, Operator::Mul, Operator::Concat],
+    ))
 }
 
-fn eval(values: &[Value], operators: &[Operator], target: Value) -> Option<Value> {
-    assert_eq!(values.len(), operators.len() + 1);
+fn sum_valid_calibrations(input: Vec<(Value, Vec<Value>)>, operators: &[Operator]) -> Value {
+    input
+        .into_par_iter()
+        .filter(|(result, values)| eval_recursive(operators, &values, 0, *result))
+        .map(|(result, _)| result)
+        .sum()
+}
 
-    let mut result = values[0];
-    for (value, op) in values.iter().skip(1).zip(operators) {
-        match op {
-            Operator::Add => result += value,
-            Operator::Mul => result *= value,
+fn eval_recursive(ops: &[Operator], values: &[Value], mut value: Value, target: Value) -> bool {
+    if value > target {
+        return false;
+    }
+
+    if values.is_empty() {
+        return value == target;
+    }
+
+    for op in ops {
+        let operand = values[0];
+        let value = match op {
+            Operator::Add => value + operand,
+            Operator::Mul => value * operand,
             Operator::Concat => {
-                let mut temp_value = *value;
+                let mut temp_value = operand;
                 while temp_value >= 10 {
-                    result *= 10;
+                    value *= 10;
                     temp_value /= 10;
                 }
-                result = result * 10 + value;
+                value * 10 + operand
             }
-        }
-        if result > target {
-            return None;
+        };
+
+        if eval_recursive(ops, &values[1..], value, target) {
+            return true;
         }
     }
-    Some(result)
-}
 
-fn generate_mutations<T>(values: &[T], length: usize) -> impl Iterator<Item = Vec<T>> + '_
-where
-    T: Copy,
-{
-    let iterators = std::iter::repeat(values.iter()).take(length);
-
-    iterators
-        .multi_cartesian_product()
-        .map(|combo| combo.into_iter().copied().collect())
+    false
 }
 
 fn parse(lines: Lines) -> PuzzleResult<Vec<(Value, Vec<Value>)>> {
