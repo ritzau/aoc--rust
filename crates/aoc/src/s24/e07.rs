@@ -50,41 +50,36 @@ fn part2(input: &Input) -> PuzzleResult<i64> {
 fn sum_valid_calibrations(input: Vec<(Value, Vec<Value>)>, operators: &[Operator]) -> Value {
     input
         .into_par_iter()
-        .filter(|(result, values)| eval_recursive(operators, &values, 0, *result))
+        .filter(|(result, values)| eval(0, &values, *result, operators))
         .map(|(result, _)| result)
         .sum()
 }
 
-fn eval_recursive(ops: &[Operator], values: &[Value], mut value: Value, target: Value) -> bool {
+fn eval(mut value: Value, values: &[Value], target: Value, ops: &[Operator]) -> bool {
     if value > target {
         return false;
     }
 
-    if values.is_empty() {
-        return value == target;
-    }
-
-    for op in ops {
-        let operand = values[0];
-        let value = match op {
-            Operator::Add => value + operand,
-            Operator::Mul => value * operand,
-            Operator::Concat => {
-                let mut temp_value = operand;
-                while temp_value >= 10 {
-                    value *= 10;
-                    temp_value /= 10;
+    if let [head, tail @ ..] = values {
+        ops.iter().any(|op| {
+            let new_value = match op {
+                Operator::Add => value + head,
+                Operator::Mul => value * head,
+                Operator::Concat => {
+                    let mut temp_value = *head;
+                    while temp_value >= 10 {
+                        value *= 10;
+                        temp_value /= 10;
+                    }
+                    value * 10 + head
                 }
-                value * 10 + operand
-            }
-        };
+            };
 
-        if eval_recursive(ops, &values[1..], value, target) {
-            return true;
-        }
+            eval(new_value, tail, target, ops)
+        })
+    } else {
+        value == target
     }
-
-    false
 }
 
 fn parse(lines: Lines) -> PuzzleResult<Vec<(Value, Vec<Value>)>> {
