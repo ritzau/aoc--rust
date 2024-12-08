@@ -1,6 +1,5 @@
 use crate::cache::AocCache;
 use crate::{PuzzleError, PuzzleResult, Year};
-use std::time::Duration;
 
 mod e00;
 mod e01;
@@ -10,6 +9,7 @@ mod e04;
 mod e05;
 mod e06;
 mod e07;
+mod e08;
 
 const YEAR: Year = Year(2024);
 
@@ -24,6 +24,7 @@ pub fn solve() -> PuzzleResult<()> {
         e05::solve,
         e06::solve,
         e07::solve,
+        e08::solve,
     ])
 }
 
@@ -36,9 +37,9 @@ fn run(seq: &[AoCSolution]) -> PuzzleResult<()> {
 }
 
 fn verify(f: AoCSolution) -> PuzzleResult<()> {
-    let start = std::time::Instant::now();
-
     let cache = AocCache::default();
+
+    let start = std::time::Instant::now();
 
     let result = match f(&cache) {
         Err(err) => Err(PuzzleError::Solution(
@@ -48,12 +49,7 @@ fn verify(f: AoCSolution) -> PuzzleResult<()> {
         _ => Ok(()),
     };
 
-    let duration = start.elapsed();
-
-    println!(
-        "Duration: {:?}",
-        Duration::from_millis(duration.as_millis() as u64)
-    );
+    println!("Duration: {:?}", start.elapsed());
 
     result
 }
