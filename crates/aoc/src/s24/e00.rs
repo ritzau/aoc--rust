@@ -21,11 +21,11 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
     Ok(())
 }
 
-fn part1(_lines: &Input) -> PuzzleResult<i32> {
+fn part1(_input: &Input) -> PuzzleResult<i32> {
     Ok(0)
 }
 
-fn part2(_lines: &Input) -> PuzzleResult<i32> {
+fn part2(_input: &Input) -> PuzzleResult<i32> {
     Ok(0)
 }
 
