@@ -53,7 +53,7 @@ fn verify(f: AoCSolution) -> PuzzleResult<()> {
         _ => Ok(()),
     };
 
-    println!("Duration: {:?}", start.elapsed());
+    println!("Duration: {:.0?}", start.elapsed());
 
     result
 }

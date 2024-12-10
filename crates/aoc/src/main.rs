@@ -33,7 +33,7 @@ fn go_nuts(old_stuff: bool) -> aoc::PuzzleResult<()> {
     s24::solve()?;
 
     let elapsed = start.elapsed();
-    println!("\nTotal duration: {:?}", elapsed);
+    println!("\nTotal duration: {:.0?}", elapsed);
 
     Ok(())
 }
