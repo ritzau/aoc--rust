@@ -4,14 +4,11 @@ use crate::s24::YEAR;
 use crate::{head, Day, PuzzleResult};
 use fxhash::FxHashSet;
 use itertools::Itertools;
-use rayon::iter::IntoParallelRefIterator;
 use rayon::prelude::*;
 use std::thread;
 use std::time::Duration;
 
 const DAY: Day = Day(6);
-
-type Set<T> = FxHashSet<T>;
 
 pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
     head(YEAR, DAY, "Guard Gallivant");
@@ -28,101 +25,156 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
     Ok(())
 }
 
-#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
-enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Direction(u8);
 
-impl Direction {
-    fn turn(&self) -> Self {
-        match self {
-            Self::North => Self::East,
-            Self::East => Self::South,
-            Self::South => Self::West,
-            Self::West => Self::North,
-        }
+const DIRECTION_NORTH_VALUE: u8 = 1;
+const DIRECTION_EAST_VALUE: u8 = 1 << 1;
+const DIRECTION_SOUTH_VALUE: u8 = 1 << 2;
+const DIRECTION_WEST_VALUE: u8 = 1 << 3;
+
+const DIRECTION_NORTH: Direction = Direction(DIRECTION_NORTH_VALUE);
+const DIRECTION_EAST: Direction = Direction(DIRECTION_EAST_VALUE);
+const DIRECTION_SOUTH: Direction = Direction(DIRECTION_SOUTH_VALUE);
+const DIRECTION_WEST: Direction = Direction(DIRECTION_WEST_VALUE);
+
+fn turn(direction: Direction) -> Direction {
+    match direction {
+        DIRECTION_NORTH => DIRECTION_EAST,
+        DIRECTION_EAST => DIRECTION_SOUTH,
+        DIRECTION_SOUTH => DIRECTION_WEST,
+        DIRECTION_WEST => DIRECTION_NORTH,
+        _ => unreachable!(),
     }
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+enum Tile {
+    OutOfBounds,
+    Open,
+    Start,
+    Obstacle,
+}
+
+const GRID_SIZE: usize = 130;
+
+type Visited<const N: usize> = [[u8; N]; N];
+
 fn part1(input: &str) -> PuzzleResult<usize> {
-    let (start, map) = parse(input);
-    let ps: Set<_> = StepIterator::new(&map, start).map(|(p, _)| p).collect();
+    let (start, map, (row_count, col_count)) = parse::<GRID_SIZE>(input);
+    let mut visited = [[0; GRID_SIZE]; GRID_SIZE];
+    let ps: FxHashSet<_> = StepIterator::new(&map, &mut visited, row_count, col_count, start)
+        .map(|(p, _)| p)
+        .collect();
+
     Ok(ps.len())
 }
 
 fn part2(input: &str) -> PuzzleResult<usize> {
-    let (start, map) = parse(input);
-    let path: Vec<_> = StepIterator::new(&map, start).collect();
+    let (start, map, (row_count, col_count)) = parse::<GRID_SIZE>(input);
+    let path: Vec<_> = StepIterator::new(
+        &map,
+        &mut [[0; GRID_SIZE]; GRID_SIZE],
+        row_count,
+        col_count,
+        start,
+    )
+    .collect();
 
     let count = path
         .par_iter()
         .map(|&(pos, _)| pos)
-        .filter(|&pos| pos != start && creates_loop(&map, &path, pos))
-        .collect::<Set<_>>()
+        .filter(|&pos| pos != start && creates_loop(&map, row_count, col_count, &path, pos))
+        .collect::<FxHashSet<_>>()
         .len();
 
     Ok(count)
 }
 
-fn creates_loop(
-    map: &Vec<Vec<char>>,
+fn creates_loop<const N: usize>(
+    map: &Grid<N>,
+    row_count: usize,
+    col_count: usize,
     path: &Vec<((i32, i32), Direction)>,
     pos: (i32, i32),
 ) -> bool {
     // Restart just before first hitting the new obstacle
     // steps > 0 since start is filtered out
+    let mut visited = [[0; N]; N];
     let step = path.iter().position(|&(p, _)| p == pos).unwrap();
-    let history = &path[..step - 1];
+    for ((r, c), d) in &path[..step - 1] {
+        visited[*r as usize][*c as usize] |= d.0;
+    }
+
     let (start, dir) = path[step - 1];
-    let mut it = StepIterator::from_state(&map, start, dir, history, Some((pos.0, pos.1)));
+    let mut it = StepIterator::from_state(
+        &map,
+        &mut visited,
+        row_count,
+        col_count,
+        start,
+        dir,
+        Some((pos.0, pos.1)),
+    );
     // Drain the iterator
     it.by_ref().for_each(drop);
     it.is_valid()
 }
 
-struct StepIterator<'a> {
-    map: &'a Vec<Vec<char>>,
+struct StepIterator<'a, const N: usize> {
+    map: &'a Grid<N>,
+    visited: &'a mut Visited<N>,
+    row_count: usize,
+    col_count: usize,
     pos: (i32, i32),
     dir: Direction,
     first: bool,
-    history: Set<((i32, i32), Direction)>,
     extra_obstacle: Option<(i32, i32)>,
 }
 
-impl<'a> StepIterator<'a> {
-    fn new(map: &'a Vec<Vec<char>>, pos: (i32, i32)) -> Self {
+impl<'a, const N: usize> StepIterator<'a, N> {
+    fn new(
+        map: &'a Grid<N>,
+        visited: &'a mut Visited<N>,
+        row_count: usize,
+        col_count: usize,
+        pos: (i32, i32),
+    ) -> Self {
         Self {
             map,
+            visited,
+            row_count,
+            col_count,
             pos,
-            dir: Direction::North,
+            dir: DIRECTION_NORTH,
             first: true,
-            history: Set::default(),
             extra_obstacle: None,
         }
     }
 
     fn from_state(
-        map: &'a Vec<Vec<char>>,
+        map: &'a Grid<N>,
+        visited: &'a mut Visited<N>,
+        row_count: usize,
+        col_count: usize,
         pos: (i32, i32),
         dir: Direction,
-        history: &[((i32, i32), Direction)],
         extra_obstacle: Option<(i32, i32)>,
     ) -> Self {
         Self {
             map,
+            visited,
+            row_count,
+            col_count,
             pos,
             dir,
             first: false,
-            history: history.iter().copied().collect(),
             extra_obstacle,
         }
     }
 
     fn valid(&self, r: i32, c: i32) -> bool {
-        (0..(self.map.len() as i32)).contains(&r) && (0..(self.map[0].len() as i32)).contains(&c)
+        0 <= r && r < self.row_count as i32 && 0 <= c && c < self.col_count as i32
     }
 
     fn is_valid(&self) -> bool {
@@ -131,43 +183,34 @@ impl<'a> StepIterator<'a> {
 
     #[allow(dead_code)]
     fn animate(&mut self) {
-        let ps: Vec<_> = self.map(|(p, _)| p).collect();
-        let is_loop = self.is_valid();
+        let ps: Vec<_> = self.collect();
 
-        print_map(&self.map);
+        print_map(&self.map, self.row_count, self.col_count);
 
         let mut count = 0;
-        let mut marks = Vec::<(i32, i32)>::new();
-        for (r, c) in &ps {
-            marks.push((*r, *c));
-            while marks.len() > 5 {
+        let mut marks = Vec::<((i32, i32), Direction)>::new();
+        for ((r, c), d) in ps {
+            marks.push(((r, c), d));
+            while marks.len() > 100 {
                 marks.remove(0);
             }
 
-            let mut map = self.map.clone();
-            for ((r, c), d) in &self.history {
-                map[*r as usize][*c as usize] = match d {
-                    Direction::North => '^',
-                    Direction::East => '>',
-                    Direction::South => 'v',
-                    Direction::West => '<',
-                };
-            }
-            for (r, c) in &marks {
-                map[*r as usize][*c as usize] = if is_loop { '*' } else { 'X' };
+            let mut visited = [[0; N]; N];
+            for ((r, c), d) in &marks {
+                visited[*r as usize][*c as usize] = d.0;
             }
 
-            if count % 10 >= 0 {
+            if count % 2 == 0 {
                 print!("\x1B[2J\x1B[1;1H");
-                print_map(&map);
-                thread::sleep(Duration::from_millis(10));
+                print_map_with_history(&self.map, &visited, self.row_count, self.col_count);
+                thread::sleep(Duration::from_millis(20));
             }
             count += 1;
         }
     }
 }
 
-impl<'a> Iterator for StepIterator<'a> {
+impl<'a, const N: usize> Iterator for StepIterator<'a, N> {
     type Item = ((i32, i32), Direction);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -176,11 +219,12 @@ impl<'a> Iterator for StepIterator<'a> {
             return Some((self.pos, self.dir));
         }
 
-        if self.history.contains(&(self.pos, self.dir)) {
+        let v = &mut self.visited[self.pos.0 as usize][self.pos.1 as usize];
+        if (*v & self.dir.0) != 0 {
             return None;
+        } else {
+            *v |= self.dir.0;
         }
-
-        self.history.insert((self.pos, self.dir));
 
         let (r, c) = self.pos;
         if !self.valid(r, c) {
@@ -188,10 +232,11 @@ impl<'a> Iterator for StepIterator<'a> {
         }
 
         let (next_r, next_c) = match self.dir {
-            Direction::North => (r - 1, c),
-            Direction::East => (r, c + 1),
-            Direction::South => (r + 1, c),
-            Direction::West => (r, c - 1),
+            DIRECTION_NORTH => (r - 1, c),
+            DIRECTION_EAST => (r, c + 1),
+            DIRECTION_SOUTH => (r + 1, c),
+            DIRECTION_WEST => (r, c - 1),
+            _ => unreachable!(),
         };
 
         if !self.valid(next_r, next_c) {
@@ -199,10 +244,10 @@ impl<'a> Iterator for StepIterator<'a> {
             return None;
         }
 
-        if (self.extra_obstacle == Some((next_r, next_c)))
-            || self.map[next_r as usize][next_c as usize] == '#'
+        if self.map[next_r as usize][next_c as usize] == Tile::Obstacle
+            || (self.extra_obstacle == Some((next_r, next_c)))
         {
-            self.dir = self.dir.turn();
+            self.dir = turn(self.dir);
             return self.next();
         }
 
@@ -211,34 +256,98 @@ impl<'a> Iterator for StepIterator<'a> {
     }
 }
 
-fn parse(input: &str) -> ((i32, i32), Vec<Vec<char>>) {
-    let map: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
-    let start = map
-        .iter()
-        .enumerate()
-        .filter_map(|(r, row)| {
-            if let Some(c) = row.iter().position(|&c| c == '^') {
-                Some((r as i32, c as i32))
-            } else {
-                None
-            }
-        })
-        .exactly_one()
-        .unwrap();
+type Grid<const N: usize> = [[Tile; N]; N];
 
-    (start, map)
+fn parse<const N: usize>(input: &str) -> ((i32, i32), Grid<N>, (usize, usize)) {
+    let mut start: Option<(i32, i32)> = None;
+
+    let map: Vec<Vec<Tile>> = input
+        .lines()
+        .enumerate()
+        .map(|(r, l)| {
+            l.chars()
+                .enumerate()
+                .map(|(c, ch)| match ch {
+                    '.' => Tile::Open,
+                    '^' => {
+                        assert_eq!(start, None);
+                        start = Some((r as i32, c as i32));
+                        Tile::Start
+                    }
+                    '#' => Tile::Obstacle,
+                    _ => Tile::OutOfBounds,
+                })
+                .collect()
+        })
+        .collect();
+
+    let mut grid = [[Tile::OutOfBounds; N]; N];
+    for (r, row) in map.iter().enumerate() {
+        for (c, &tile) in row.iter().enumerate() {
+            grid[r][c] = tile;
+        }
+    }
+
+    (start.unwrap(), grid, (map.len(), map[0].len()))
 }
 
 #[allow(dead_code)]
-fn print_map(map: &Vec<Vec<char>>) {
+fn print_map<const N: usize>(map: &Grid<N>, row_count: usize, col_count: usize) {
     println!(
         "{}",
         map.iter()
+            .take(row_count)
             .map(|r| r
                 .iter()
+                .take(col_count)
                 .map(|&c| match c {
-                    '.' => ' ',
-                    _ => c,
+                    Tile::OutOfBounds => ' ',
+                    Tile::Open => '.',
+                    Tile::Start => '^',
+                    Tile::Obstacle => '#',
+                })
+                .map(|c| format!("{} ", c))
+                .collect::<String>())
+            .join("\n")
+    );
+}
+
+#[allow(dead_code)]
+fn print_map_with_history<const N: usize>(
+    map: &Grid<N>,
+    visited: &Visited<N>,
+    row_count: usize,
+    col_count: usize,
+) {
+    println!(
+        "{}",
+        map.iter()
+            .zip(visited.iter())
+            .take(row_count)
+            .map(|(r, v)| r
+                .iter()
+                .zip(v.iter())
+                .take(col_count)
+                .map(|(m, v)| match m {
+                    Tile::OutOfBounds => ' ',
+                    Tile::Open => {
+                        match *v {
+                            0 => ' ',
+                            DIRECTION_NORTH_VALUE => '^',
+                            DIRECTION_EAST_VALUE => '>',
+                            DIRECTION_SOUTH_VALUE => 'v',
+                            DIRECTION_WEST_VALUE => '<',
+                            _ => 'X',
+                        }
+                    }
+                    Tile::Start => {
+                        if *v == 0 {
+                            '^'
+                        } else {
+                            'X'
+                        }
+                    }
+                    Tile::Obstacle => '#',
                 })
                 .map(|c| format!("{} ", c))
                 .collect::<String>())
@@ -266,16 +375,19 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let (start, map) = parse(SAMPLE);
+        let (start, _map, (row_count, col_count)) = parse::<16>(SAMPLE);
         assert_eq!(start, (6, 4));
-        assert_eq!(map.len(), 10);
-        assert_eq!(map[0].len(), 10);
+        assert_eq!(row_count, 10);
+        assert_eq!(col_count, 10);
     }
 
     #[test]
     fn test_iterator() {
-        let (start, map) = parse(SAMPLE);
-        let ps: HashSet<_> = StepIterator::new(&map, start).map(|(p, _)| p).collect();
+        let (start, map, (row_count, col_count)) = parse::<16>(SAMPLE);
+        let mut visited = [[0; 16]; 16];
+        let ps: HashSet<_> = StepIterator::new(&map, &mut visited, row_count, col_count, start)
+            .map(|(p, _)| p)
+            .collect();
         assert_eq!(ps.len(), 41);
     }
 
