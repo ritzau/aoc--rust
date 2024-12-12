@@ -13,6 +13,7 @@ mod e08;
 mod e09;
 mod e10;
 mod e11;
+mod e12;
 
 const YEAR: Year = Year(2024);
 
@@ -31,6 +32,7 @@ pub fn solve() -> PuzzleResult<()> {
         e09::solve,
         e10::solve,
         e11::solve,
+        e12::solve,
     ])
 }
 
@@ -55,7 +57,7 @@ fn verify(f: AoCSolution) -> PuzzleResult<()> {
         _ => Ok(()),
     };
 
-    println!("Duration: {:.0?}", start.elapsed());
+    println!("Duration: {:.1?}", start.elapsed());
 
     result
 }
