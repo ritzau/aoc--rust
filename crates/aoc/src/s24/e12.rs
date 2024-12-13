@@ -7,7 +7,6 @@ use std::collections::VecDeque;
 
 const DAY: Day = Day(12);
 
-#[allow(dead_code)]
 pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
     head(YEAR, DAY, "Garden Groups");
     let input = aoc.get_input(YEAR, DAY)?;
