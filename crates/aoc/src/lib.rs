@@ -114,3 +114,8 @@ fn head(year: Year, day: Day, title: &str) {
     println!();
     println!("-- Advent of Code {} Day {}: {} ---", year.0, day.0, title)
 }
+
+#[allow(dead_code)]
+fn clear_terminal() {
+    print!("\x1B[2J\x1B[1;1H");
+}
