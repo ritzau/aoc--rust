@@ -346,8 +346,7 @@ mod part_2 {
         }
 
         fn can_move(&self, x: usize, y: usize, direction: Direction) -> bool {
-            let tile = self.grid[y][x];
-            match tile {
+            match self.grid[y][x] {
                 Tile::Empty => true,
                 Tile::Wall => false,
                 Tile::OutOfBounds => panic!("out of bounds"),
@@ -389,21 +388,17 @@ mod part_2 {
             direction: Direction,
             side: TileSide,
         ) -> Vec<((usize, usize), (usize, usize))> {
-            match (direction, side) {
-                (Direction::East, _) => vec![((x, y), (x + 1, y))],
-                (Direction::West, _) => vec![((x, y), (x - 1, y))],
-                (Direction::North, TileSide::Left) => {
-                    vec![((x, y), (x, y - 1)), ((x + 1, y), (x + 1, y - 1))]
-                }
-                (Direction::North, TileSide::Right) => {
-                    vec![((x - 1, y), (x - 1, y - 1)), ((x, y), (x, y - 1))]
-                }
-                (Direction::South, TileSide::Left) => {
-                    vec![((x, y), (x, y + 1)), ((x + 1, y), (x + 1, y + 1))]
-                }
-                (Direction::South, TileSide::Right) => {
-                    vec![((x - 1, y), (x - 1, y + 1)), ((x, y), (x, y + 1))]
-                }
+            match direction {
+                Direction::East => vec![((x, y), (x + 1, y))],
+                Direction::West => vec![((x, y), (x - 1, y))],
+                Direction::North => match side {
+                    TileSide::Left => vec![((x, y), (x, y - 1)), ((x + 1, y), (x + 1, y - 1))],
+                    TileSide::Right => vec![((x - 1, y), (x - 1, y - 1)), ((x, y), (x, y - 1))],
+                },
+                Direction::South => match side {
+                    TileSide::Left => vec![((x, y), (x, y + 1)), ((x + 1, y), (x + 1, y + 1))],
+                    TileSide::Right => vec![((x - 1, y), (x - 1, y + 1)), ((x, y), (x, y + 1))],
+                },
             }
         }
 
