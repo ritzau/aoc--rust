@@ -397,7 +397,7 @@ mod tests {
     #[test]
     #[ignore] // Only test manually
     fn test_print() {
-        let (start, map, (row_count, col_count)) = parse::<16>(SAMPLE);
+        let (_, map, (row_count, col_count)) = parse::<16>(SAMPLE);
         print_map(&map, row_count, col_count);
     }
 
