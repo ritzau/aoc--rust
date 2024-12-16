@@ -63,7 +63,6 @@ fn find_peak<const N: usize>(head: (usize, usize), grid: &[[i8; N]; N]) -> (usiz
     let mut peaks = Vec::new();
     let mut queue = vec![head];
     while let Some(pos) = queue.pop() {
-        
         let height = grid[pos.0][pos.1];
         if height == 9 {
             peaks.push(pos);

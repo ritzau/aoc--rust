@@ -123,10 +123,7 @@ where
 }
 
 fn parse(input: &Input) -> PuzzleResult<Vec<Sue>> {
-    Ok(input
-        .lines()?
-        .map(Sue::from)
-        .collect::<Vec<_>>())
+    Ok(input.lines()?.map(Sue::from).collect::<Vec<_>>())
 }
 
 #[cfg(test)]
