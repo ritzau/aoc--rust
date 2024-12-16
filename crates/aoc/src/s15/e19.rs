@@ -21,7 +21,7 @@ pub fn medicine_for_rudolph(aoc: &AocCache) -> PuzzleResult<bool> {
     let ms = create_molecules(&molecule, &rule_set);
     println!("aoc15e19: {}", ms.len());
 
-    let n = min_reductions_bisect_with_persistent_tracking(&rule_set, &molecule.trim());
+    let n = min_reductions_bisect_with_persistent_tracking(&rule_set, molecule.trim());
     println!(
         "aoc15e19b: {}",
         n.map(|x| x.to_string()).unwrap_or("None".to_string())
@@ -41,7 +41,7 @@ fn parse(lines: Lines) -> PuzzleResult<(Vec<(String, String)>, String)> {
         })
         .try_collect()?;
 
-    if let Some(_) = lines.peek() {
+    if lines.peek().is_some() {
         // assert that it is empty?
         lines.next();
     }

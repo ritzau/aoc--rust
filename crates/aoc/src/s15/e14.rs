@@ -29,18 +29,15 @@ pub fn reindeer_olympics(aoc: &AocCache) -> PuzzleResult<bool> {
 fn part_1(input: &str) -> PuzzleResult<u32> {
     let max_distance = input
         .lines()
-        .map(|line| Reindeer::from(line))
+        .map(Reindeer::from)
         .map(|reindeer| reindeer.distance_after(2503))
-        .fold(0, |max_distance, distance| max(max_distance, distance));
+        .fold(0, max);
 
     Ok(max_distance)
 }
 
 fn part_2(input: &str) -> PuzzleResult<u32> {
-    let reindeers = input
-        .lines()
-        .map(|line| Reindeer::from(line))
-        .collect::<Vec<_>>();
+    let reindeers = input.lines().map(Reindeer::from).collect::<Vec<_>>();
 
     let mut scores = HashMap::<&str, u32>::new();
 
@@ -61,7 +58,7 @@ fn part_2(input: &str) -> PuzzleResult<u32> {
             });
     }
 
-    Ok(scores.into_iter().map(|(_, score)| score).max().unwrap())
+    Ok(scores.into_values().max().unwrap())
 }
 
 #[derive(Debug, PartialEq)]
@@ -84,7 +81,6 @@ impl Reindeer {
     }
 
     fn from(s: &str) -> Self {
-        let s = s.as_ref();
         let pattern = Regex::new(
             r"(\w+) can fly (\d+) km/s for (\d+) seconds, but then must rest for (\d+) seconds.",
         )

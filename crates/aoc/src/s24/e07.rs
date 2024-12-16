@@ -48,7 +48,7 @@ fn part2(input: &Input) -> PuzzleResult<i64> {
 fn sum_valid_calibrations(input: Vec<(Value, Vec<Value>)>, operators: &[Operator]) -> Value {
     input
         .into_par_iter()
-        .filter(|(result, values)| eval(0, &values, *result, operators))
+        .filter(|(result, values)| eval(0, values, *result, operators))
         .map(|(result, _)| result)
         .sum()
 }

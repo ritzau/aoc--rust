@@ -142,7 +142,7 @@ impl Scene {
                 let values: Vec<Value> = caps
                     .iter()
                     .skip(1)
-                    .filter_map(|m| m)
+                    .flatten()
                     .map(|v| v.as_str().parse().unwrap())
                     .collect();
 
@@ -202,8 +202,8 @@ impl Scene {
         let scale = 4;
         let threshold = 40;
 
-        let mut horizontal = vec![0; (self.width + scale - 1) / scale];
-        let mut vertical = vec![0; (self.height + scale - 1) / scale];
+        let mut horizontal = vec![0; self.width.div_ceil(scale)];
+        let mut vertical = vec![0; self.height.div_ceil(scale)];
 
         for robot in &self.robots {
             horizontal[(robot.x as usize) / scale] += 1;

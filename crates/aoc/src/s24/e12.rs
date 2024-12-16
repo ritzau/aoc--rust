@@ -209,7 +209,6 @@ fn part1(input: &Input) -> PuzzleResult<i32> {
     let regions = map.identify_regions();
     let cost = regions
         .values()
-        .into_iter()
         .map(|&(area, perimeter)| area as i32 * perimeter as i32)
         .sum();
     Ok(cost)

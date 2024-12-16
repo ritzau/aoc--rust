@@ -85,7 +85,7 @@ impl<'a> From<&'a str> for Lines<'a> {
     }
 }
 
-impl<'a> Iterator for Lines<'a> {
+impl Iterator for Lines<'_> {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {

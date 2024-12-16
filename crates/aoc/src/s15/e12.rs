@@ -26,12 +26,12 @@ pub fn js_abacus_framework_io(aoc: &AocCache) -> PuzzleResult<bool> {
     Ok(sum == 191164 && red_sum == 87842)
 }
 
-fn sum_numbers(input: &String) -> Result<i64, PuzzleError> {
+fn sum_numbers(input: &str) -> Result<i64, PuzzleError> {
     let non_digit_pattern =
         Regex::new(r"[^-\d]+").map_err(|e| PuzzleError::Input(format!("Bad regex: {e}")))?;
 
     let sum: i64 = non_digit_pattern
-        .split(&input)
+        .split(input)
         .filter(|s| !s.is_empty())
         .map(|n| n.parse::<i64>().unwrap_or_default())
         .sum();
@@ -85,7 +85,7 @@ impl<'a> DummyParser<'a> {
                 is_red |= self.parse_string()? == "red";
             } else if self.accept_if('-') {
                 sum -= self.parse_number()?;
-            } else if self.iter.peek().unwrap().is_digit(10) {
+            } else if self.iter.peek().unwrap().is_ascii_digit() {
                 sum += self.parse_number()?;
             } else {
                 self.accept();
@@ -109,7 +109,7 @@ impl<'a> DummyParser<'a> {
                 self.parse_string()?;
             } else if self.accept_if('-') {
                 sum -= self.parse_number()?;
-            } else if self.iter.peek().unwrap().is_digit(10) {
+            } else if self.iter.peek().unwrap().is_ascii_digit() {
                 sum += self.parse_number()?;
             } else {
                 self.accept();

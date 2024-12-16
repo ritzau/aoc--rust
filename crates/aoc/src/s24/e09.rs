@@ -29,7 +29,7 @@ fn part1(input: &Input) -> PuzzleResult<usize> {
 
 fn part2(input: &Input) -> PuzzleResult<usize> {
     let d = Disk::from_str(&input.read_to_string()?);
-    Ok(d.compact_checksum()?)
+    d.compact_checksum()
 }
 
 type FileId = u32;
@@ -164,11 +164,9 @@ impl Disk {
                 if start.is_none() {
                     start = Some(i);
                 }
-            } else {
-                if let Some(s) = start {
-                    free_list.push((s, i - s));
-                    start = None;
-                }
+            } else if let Some(s) = start {
+                free_list.push((s, i - s));
+                start = None;
             }
         }
 
@@ -188,7 +186,7 @@ impl Disk {
 
     #[allow(dead_code)]
     fn move_file(
-        disk: &mut Vec<FileId>,
+        disk: &mut [FileId],
         free_list: &mut Vec<(usize, usize)>,
         file_id: FileId,
         file_start_index: usize,
@@ -225,7 +223,7 @@ impl Disk {
     }
 
     fn free_entry_position(
-        free_list: &mut Vec<(usize, usize)>,
+        free_list: &mut [(usize, usize)],
         file_start_index: usize,
         file_size: usize,
     ) -> Option<usize> {

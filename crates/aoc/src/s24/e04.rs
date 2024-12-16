@@ -80,7 +80,7 @@ struct RowsIterator<'a> {
     row_index: usize,
 }
 
-impl<'a> Iterator for RowsIterator<'a> {
+impl Iterator for RowsIterator<'_> {
     type Item = (String, Vec<(usize, usize)>);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -109,7 +109,7 @@ struct ColumnsIterator<'a> {
     col_index: usize,
 }
 
-impl<'a> Iterator for ColumnsIterator<'a> {
+impl Iterator for ColumnsIterator<'_> {
     type Item = (String, Vec<(usize, usize)>);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -147,7 +147,7 @@ struct DiagonalIterator<'a> {
     direction: DiagonalDirection,
 }
 
-impl<'a> Iterator for DiagonalIterator<'a> {
+impl Iterator for DiagonalIterator<'_> {
     type Item = (String, Vec<(usize, usize)>);
 
     fn next(&mut self) -> Option<Self::Item> {

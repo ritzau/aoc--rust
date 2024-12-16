@@ -67,7 +67,7 @@ impl DynamicStrings {
         if self.set.contains(s) {
             self.set.get(s).unwrap().clone()
         } else {
-            let rc: Rc<str> = Rc::from(s.as_ref());
+            let rc: Rc<str> = Rc::from(s);
             self.set.insert(rc.clone());
             rc
         }
@@ -176,10 +176,9 @@ fn parse_entries(
     Ok(lines.map(|e| parse_line(&e.unwrap()).unwrap()).collect())
 }
 
-fn parse_entries_b(
-    strings: &mut DynamicStrings,
-    lines: Lines,
-) -> PuzzleResult<Vec<((Rc<str>, Rc<str>), i64)>> {
+type EntriesB = Vec<((Rc<str>, Rc<str>), i64)>;
+
+fn parse_entries_b(strings: &mut DynamicStrings, lines: Lines) -> PuzzleResult<EntriesB> {
     let entries = lines
         .map(|e| {
             let ((p1, p2), happiness) = parse_line(&e).unwrap();
@@ -193,7 +192,7 @@ fn parse_entries_b(
     Ok(entries)
 }
 
-fn get_strings(entries: &Vec<((String, String), i64)>) -> StaticStrings {
+fn get_strings(entries: &[((String, String), i64)]) -> StaticStrings {
     let peeps: Vec<_> = entries
         .iter()
         .flat_map(|((p1, p2), _)| [p1, p2])
@@ -204,10 +203,12 @@ fn get_strings(entries: &Vec<((String, String), i64)>) -> StaticStrings {
     StaticStrings::new(&peeps)
 }
 
+type EntriesA<'a> = (Vec<&'a str>, HashMap<(&'a str, &'a str), i64>);
+
 fn parse<'a>(
     strings: &'a StaticStrings,
-    entries: &Vec<((String, String), i64)>,
-) -> PuzzleResult<(Vec<&'a str>, HashMap<(&'a str, &'a str), i64>)> {
+    entries: &[((String, String), i64)],
+) -> PuzzleResult<EntriesA<'a>> {
     let peeps = entries
         .iter()
         .flat_map(|((p1, p2), _)| [p1, p2])
@@ -228,9 +229,10 @@ fn parse<'a>(
     Ok((peeps, pairs))
 }
 
-fn parse_b(
-    entries: &[((Rc<str>, Rc<str>), i64)],
-) -> PuzzleResult<(Vec<Rc<str>>, HashMap<(Rc<str>, Rc<str>), i64>)> {
+type EntryB = ((Rc<str>, Rc<str>), i64);
+type PeepsAndPairs = (Vec<Rc<str>>, HashMap<(Rc<str>, Rc<str>), i64>);
+
+fn parse_b(entries: &[EntryB]) -> PuzzleResult<PeepsAndPairs> {
     let peeps = entries
         .iter()
         .flat_map(|((p1, p2), _)| [p1, p2])

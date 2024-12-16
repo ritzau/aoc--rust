@@ -93,7 +93,7 @@ mod test {
     #[test]
     fn test_contains_consecutive_pairs() {
         let pattern = Regex::new(REPEATED_PAIRS_REGEX).unwrap();
-        let contains_consecutive_pairs = |s: &str| matches(&pattern, &s);
+        let contains_consecutive_pairs = |s: &str| matches(&pattern, s);
 
         assert!(contains_consecutive_pairs("xyxy"));
         assert!(contains_consecutive_pairs("aabcdefgaa"));
@@ -103,7 +103,7 @@ mod test {
     #[test]
     fn test_contains_interspersed_repeated_character() {
         let pattern = Regex::new(REPEATED_CHARS_REGEX).unwrap();
-        let has_interspersed_repeated_char = |s: &str| matches(&pattern, &s);
+        let has_interspersed_repeated_char = |s: &str| matches(&pattern, s);
 
         assert!(has_interspersed_repeated_char("aba"));
         assert!(has_interspersed_repeated_char("aaa"));

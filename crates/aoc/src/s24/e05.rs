@@ -36,7 +36,7 @@ fn part1(lines: Lines) -> PuzzleResult<i32> {
 
     let sum = updates
         .into_iter()
-        .filter(|update| is_sorted(&ordering, &update))
+        .filter(|update| is_sorted(&ordering, update))
         .map(|update| update[update.len() / 2])
         .sum();
 
@@ -89,12 +89,12 @@ fn pair_compare(cmp: &CompareSet, a: &Page, b: &Page) -> Ordering {
 }
 
 fn is_sorted(ordering: &CompareSet, update: &Update) -> bool {
-    update.is_sorted_by(|a, b| pair_compare(&ordering, a, b) == Ordering::Less)
+    update.is_sorted_by(|a, b| pair_compare(ordering, a, b) == Ordering::Less)
 }
 
 fn sorted(ordering: &CompareSet, update: &Update) -> Update {
     let mut pages = update.clone();
-    pages.sort_by(|a, b| pair_compare(&ordering, a, b));
+    pages.sort_by(|a, b| pair_compare(ordering, a, b));
     pages
 }
 

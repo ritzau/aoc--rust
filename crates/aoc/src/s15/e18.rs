@@ -101,10 +101,8 @@ impl Grid {
     }
 
     fn is_corner(&self, x: usize, y: usize) -> bool {
-        x == 0 && y == 0
-            || x == 0 && y == self.grid.len() - 1
-            || x == self.grid.len() - 1 && y == 0
-            || x == self.grid.len() - 1 && y == self.grid.len() - 1
+        (x == 0 && (y == 0 || y == self.grid.len() - 1))
+            || (x == self.grid.len() - 1 && (y == 0 || y == self.grid.len() - 1))
     }
 
     fn count_neighbours(&self, x: usize, y: usize) -> usize {
@@ -121,12 +119,10 @@ impl Grid {
             assert!(!self.grid[y].is_empty());
             assert!(y < self.grid[y].len());
             for x_neighbour in begin_x..=end_x {
-                if x_neighbour != x || y_neighbour != y {
-                    if self.grid[y_neighbour][x_neighbour] == '#' {
-                        count += 1;
-                    } else {
-                    }
-                } else {
+                if (x_neighbour != x || y_neighbour != y)
+                    && self.grid[y_neighbour][x_neighbour] == '#'
+                {
+                    count += 1;
                 }
             }
         }

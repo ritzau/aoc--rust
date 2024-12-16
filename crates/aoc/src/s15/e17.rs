@@ -42,23 +42,23 @@ fn pack(containers: &[i32], target: i32) -> Vec<Vec<i32>> {
         return vec![];
     }
 
-    let mut foo = Vec::new();
+    let mut result = Vec::new();
 
     if target == containers[0] {
-        foo.push(vec![containers[0]]);
+        result.push(vec![containers[0]]);
     }
 
     for p in pack(&containers[1..], target - containers[0]) {
-        let mut result = vec![containers[0]];
-        result.extend(p);
-        foo.push(result);
+        let mut r = vec![containers[0]];
+        r.extend(p);
+        result.push(r);
     }
 
     for p in pack(&containers[1..], target) {
-        foo.push(p);
+        result.push(p);
     }
 
-    foo
+    result
 }
 
 #[cfg(test)]

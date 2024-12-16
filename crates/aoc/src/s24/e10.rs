@@ -22,7 +22,7 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
 
 fn parts2and1(input: &str) -> PuzzleResult<(usize, usize)> {
     let mut grid = [[-1; 64]; 64];
-    parse(&input, &mut grid)?;
+    parse(input, &mut grid)?;
     let scores = find_heads(&grid)
         .into_iter()
         .map(|h| find_peak(h, &grid))
@@ -62,8 +62,8 @@ fn find_heads<const N: usize>(grid: &[[i8; N]; N]) -> Vec<(usize, usize)> {
 fn find_peak<const N: usize>(head: (usize, usize), grid: &[[i8; N]; N]) -> (usize, usize) {
     let mut peaks = Vec::new();
     let mut queue = vec![head];
-    while !queue.is_empty() {
-        let pos = queue.pop().unwrap();
+    while let Some(pos) = queue.pop() {
+        
         let height = grid[pos.0][pos.1];
         if height == 9 {
             peaks.push(pos);

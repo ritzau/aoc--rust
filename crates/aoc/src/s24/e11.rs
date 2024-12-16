@@ -59,7 +59,7 @@ fn step(input: &FxHashMap<Value, Value>) -> FxHashMap<Value, Value> {
 
     let mut result = FxHashMap::default();
 
-    input.into_iter().for_each(|(&k, &v)| {
+    input.iter().for_each(|(&k, &v)| {
         if k == 0 {
             increase(&mut result, 1, v);
             return;

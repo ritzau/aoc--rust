@@ -22,7 +22,7 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
 }
 
 fn part1(input: &str) -> PuzzleResult<i32> {
-    let re = regex::Regex::new(r"mul\((\d+),(\d+)\)").unwrap();
+    let re = Regex::new(r"mul\((\d+),(\d+)\)").unwrap();
     Ok(re
         .captures_iter(input)
         .map(|cap| {

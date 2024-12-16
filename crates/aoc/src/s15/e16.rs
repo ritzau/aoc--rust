@@ -1,7 +1,7 @@
 use crate::cache::AocCache;
 use crate::input::{Input, InputFetcher};
 use crate::s15::YEAR;
-use crate::{head, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 use std::collections::BTreeMap;
 
 const DAY: Day = Day(16);
@@ -90,8 +90,8 @@ impl Sue {
     fn really_matches(&self, other: &Sue) -> bool {
         self.props.iter().all(|(prop, value)| {
             other.props.get(prop).map_or(true, |v| match prop {
-                SueProp::Cats | SueProp::Trees => return *v > *value,
-                SueProp::Pomeranians | SueProp::Goldfish => return *v < *value,
+                SueProp::Cats | SueProp::Trees => *v > *value,
+                SueProp::Pomeranians | SueProp::Goldfish => *v < *value,
                 _ => *v == *value,
             })
         })
@@ -112,7 +112,7 @@ where
             .split(", ")
             .map(|s| {
                 let parts = s.splitn(2, ": ").collect::<Vec<_>>();
-                let prop = SueProp::try_from(parts[0]).unwrap();
+                let prop = SueProp::from(parts[0]);
                 let value = parts[1].parse::<usize>().unwrap();
                 (prop, value)
             })
@@ -123,12 +123,10 @@ where
 }
 
 fn parse(input: &Input) -> PuzzleResult<Vec<Sue>> {
-    input
+    Ok(input
         .lines()?
-        .map(|line| {
-            Sue::try_from(line).map_err(|e| PuzzleError::Input(format!("Parse error: {e}")))
-        })
-        .collect::<PuzzleResult<Vec<_>>>()
+        .map(Sue::from)
+        .collect::<Vec<_>>())
 }
 
 #[cfg(test)]

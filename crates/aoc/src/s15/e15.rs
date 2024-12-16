@@ -25,15 +25,15 @@ pub fn science_for_hungry_people(aoc: &AocCache) -> PuzzleResult<bool> {
     Ok(max_score == 21367368 || max_restricted_score == 1766400)
 }
 
-fn get_max_score(ingredients: &Vec<Ingredient>, exactly_500: bool) -> i64 {
+fn get_max_score(ingredients: &[Ingredient], exactly_500: bool) -> i64 {
     let mut max_score = 0i64;
 
     generate_combinations(ingredients.len(), 100, |combination| {
-        let capacity = sum_prop(&ingredients, combination, |i| i.capacity);
-        let durability = sum_prop(&ingredients, combination, |i| i.durability);
-        let flavor = sum_prop(&ingredients, combination, |i| i.flavor);
-        let texture = sum_prop(&ingredients, combination, |i| i.texture);
-        let calories = sum_prop(&ingredients, combination, |i| i.calories);
+        let capacity = sum_prop(ingredients, combination, |i| i.capacity);
+        let durability = sum_prop(ingredients, combination, |i| i.durability);
+        let flavor = sum_prop(ingredients, combination, |i| i.flavor);
+        let texture = sum_prop(ingredients, combination, |i| i.texture);
+        let calories = sum_prop(ingredients, combination, |i| i.calories);
 
         if exactly_500 && calories != 500 {
             return;
@@ -101,8 +101,6 @@ impl Ingredient {
     }
 
     fn parse(s: &str) -> Ingredient {
-        let s = s.as_ref();
-
         if let Some(caps) = INGREDIENTS_REGEX.captures(s) {
             let capacity = caps.get(2).unwrap().as_str().parse().unwrap();
             let durability = caps.get(3).unwrap().as_str().parse().unwrap();

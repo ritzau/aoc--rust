@@ -24,19 +24,19 @@ pub fn corporate_policy(aoc: &AocCache) -> PuzzleResult<bool> {
     Ok(next_password == "cqjxxyzz" && second_next_password == "cqkaabcc")
 }
 
-const A_CHAR: u8 = 'a' as u8;
-const I_CODE: u8 = 'i' as u8 - A_CHAR;
-const L_CODE: u8 = 'l' as u8 - A_CHAR;
-const O_CODE: u8 = 'o' as u8 - A_CHAR;
-const Z_CODE: u8 = 'z' as u8 - A_CHAR;
+const A_CHAR: u8 = b'a';
+const I_CODE: u8 = b'i' - A_CHAR;
+const L_CODE: u8 = b'l' - A_CHAR;
+const O_CODE: u8 = b'o' - A_CHAR;
+const Z_CODE: u8 = b'z' - A_CHAR;
 
-fn increment(pw: &mut Vec<u8>) {
-    for ind in 0..pw.len() {
-        if pw[ind] < Z_CODE {
-            pw[ind] += 1;
+fn increment(pw: &mut [u8]) {
+    for elm in pw {
+        if *elm < Z_CODE {
+            *elm += 1;
             break;
         } else {
-            pw[ind] = 0;
+            *elm = 0;
         }
     }
 }
@@ -55,27 +55,27 @@ fn to_bytes(s: &str) -> Vec<u8> {
     s.as_bytes().iter().rev().map(|c| c - A_CHAR).collect()
 }
 
-fn from_bytes(bytes: &Vec<u8>) -> String {
-    String::from_utf8(bytes.iter().map(|b| b + ('a' as u8)).rev().collect()).unwrap()
+fn from_bytes(bytes: &[u8]) -> String {
+    String::from_utf8(bytes.iter().map(|b| b + b'a').rev().collect()).unwrap()
 }
 
-fn is_valid(bytes: &Vec<u8>) -> bool {
+fn is_valid(bytes: &[u8]) -> bool {
     !has_forbidden_chars(bytes) && has_straight(bytes) && has_two_pairs(bytes)
 }
 
-fn has_forbidden_chars(bytes: &Vec<u8>) -> bool {
+fn has_forbidden_chars(bytes: &[u8]) -> bool {
     bytes
         .iter()
         .any(|&c| c == I_CODE || c == L_CODE || c == O_CODE)
 }
 
-fn has_straight(bytes: &Vec<u8>) -> bool {
+fn has_straight(bytes: &[u8]) -> bool {
     bytes
         .windows(3)
         .any(|w| w[0] >= 2 && w[0] - 1 == w[1] && w[1] - 1 == w[2])
 }
 
-fn has_two_pairs(bytes: &Vec<u8>) -> bool {
+fn has_two_pairs(bytes: &[u8]) -> bool {
     let mut last = bytes[0];
     let mut pair_count = 0;
 

@@ -23,7 +23,7 @@ impl Package {
 
     fn parse(text: &str) -> Self {
         let dimensions: Vec<u32> = text.split('x').map(|s| s.parse().unwrap()).collect();
-        assert!(dimensions.len() == 3);
+        assert_eq!(dimensions.len(), 3);
         Self::new(dimensions[0], dimensions[1], dimensions[2])
     }
 

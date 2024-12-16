@@ -26,7 +26,6 @@ pub fn some_assembly_required(aoc: &AocCache) -> PuzzleResult<bool> {
         let mut circuit = Circuit::new();
 
         for line in input.lines()? {
-            let line = line;
             let gate = Gate::parse(&line);
             circuit.add_gate(gate);
         }
@@ -42,7 +41,6 @@ pub fn some_assembly_required(aoc: &AocCache) -> PuzzleResult<bool> {
         let mut circuit = Circuit::new();
 
         for line in input.lines()? {
-            let line = line;
             let mut gate = Gate::parse(&line);
             if gate.operation == Forward && gate.output == "b" {
                 gate.inputs = vec![Value(a1)]
@@ -116,8 +114,6 @@ impl Gate {
         let direct_pattern = Regex::new(r"^(\w+) -> (\w+)$").unwrap();
         let unary_pattern = Regex::new(r"^(NOT) (\w+) -> (\w+)$").unwrap();
         let binary_pattern = Regex::new(r"^(\w+) (AND|OR|LSHIFT|RSHIFT) (\w+) -> (\w+)$").unwrap();
-
-        let s = s.as_ref();
 
         if let Some(cs) = direct_pattern.captures(s) {
             let operand = match_as_str(cs.get(1)).into();

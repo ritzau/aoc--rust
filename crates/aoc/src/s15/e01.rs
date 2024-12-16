@@ -29,7 +29,7 @@ fn count_floors(input: &str) -> i32 {
         .map(|c| match c {
             '(' => 1,
             ')' => -1,
-            otherwise => panic!("Unkown char: {}", otherwise),
+            otherwise => panic!("Unknown char: {}", otherwise),
         })
         .sum()
 }
@@ -40,7 +40,7 @@ fn find_basement(input: &str) -> Option<usize> {
         .map(|c| match c {
             '(' => 1,
             ')' => -1,
-            c => panic!("Unkown char: {}", c),
+            c => panic!("Unknown char: {}", c),
         })
         .scan(0, |state, x| {
             if *state == -1 {

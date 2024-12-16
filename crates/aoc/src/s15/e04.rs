@@ -192,7 +192,7 @@ fn find_match_threaded(input: &str, leading_zeroes: usize) -> Option<u32> {
 
     (0..10_000_000)
         .step_by(num_threads * chunk_size)
-        .find_map(|start| find(start))
+        .find_map(find)
 }
 
 fn find_match_threaded_chunk(

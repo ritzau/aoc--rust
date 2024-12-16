@@ -23,7 +23,6 @@ fn decode_delta(lines: Lines) -> PuzzleResult<usize> {
     let mut decoded_len = 0usize;
 
     for line in lines {
-        let line = line;
         literal_len += line.len();
         decoded_len += decoded_length(&line)?;
     }
@@ -36,14 +35,13 @@ fn encode_delta(lines: Lines) -> PuzzleResult<usize> {
     let mut encoded_len = 0usize;
 
     for line in lines {
-        let line = line;
         literal_len += line.len();
         encoded_len += encoded_length(&line);
     }
 
     Ok(encoded_len - literal_len)
 }
-fn decoded_length(s: &String) -> PuzzleResult<usize> {
+fn decoded_length(s: &str) -> PuzzleResult<usize> {
     let mut cs = s.chars();
     let mut expect = |c| {
         let next = cs.next();
@@ -84,7 +82,7 @@ fn decoded_length(s: &String) -> PuzzleResult<usize> {
     Ok(count)
 }
 
-fn encoded_length(s: &String) -> usize {
+fn encoded_length(s: &str) -> usize {
     2 + s.chars().fold(0usize, |count, c| match c {
         '"' | '\\' => count + 2,
         _ => count + 1,
@@ -97,17 +95,17 @@ mod test {
 
     #[test]
     fn test_decoded_diff() {
-        assert_eq!(decoded_length(&r#""""#.into()).ok(), Some(0));
-        assert_eq!(decoded_length(&r#""abc""#.into()).ok(), Some(3));
-        assert_eq!(decoded_length(&r#""aaa\"aaa""#.into()).ok(), Some(7));
-        assert_eq!(decoded_length(&r#""\x27""#.into()).ok(), Some(1));
+        assert_eq!(decoded_length(r#""""#).ok(), Some(0));
+        assert_eq!(decoded_length(r#""abc""#).ok(), Some(3));
+        assert_eq!(decoded_length(r#""aaa\"aaa""#).ok(), Some(7));
+        assert_eq!(decoded_length(r#""\x27""#).ok(), Some(1));
     }
 
     #[test]
     fn test_encoded_diff() {
-        assert_eq!(encoded_length(&r#""""#.into()), 6);
-        assert_eq!(encoded_length(&r#""abc""#.into()), 9);
-        assert_eq!(encoded_length(&r#""aaa\"aaa""#.into()), 16);
-        assert_eq!(encoded_length(&r#""\x27""#.into()), 11);
+        assert_eq!(encoded_length(r#""""#), 6);
+        assert_eq!(encoded_length(r#""abc""#), 9);
+        assert_eq!(encoded_length(r#""aaa\"aaa""#), 16);
+        assert_eq!(encoded_length(r#""\x27""#), 11);
     }
 }

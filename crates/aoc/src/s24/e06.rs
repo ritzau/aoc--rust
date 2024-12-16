@@ -5,6 +5,7 @@ use crate::{head, Day, PuzzleResult};
 use fxhash::FxHashSet;
 use itertools::Itertools;
 use rayon::prelude::*;
+use std::fmt::Write;
 use std::thread;
 use std::time::Duration;
 
@@ -95,7 +96,7 @@ fn creates_loop<const N: usize>(
     map: &Grid<N>,
     row_count: usize,
     col_count: usize,
-    path: &Vec<((i32, i32), Direction)>,
+    path: &[((i32, i32), Direction)],
     pos: (i32, i32),
 ) -> bool {
     // Restart just before first hitting the new obstacle
@@ -108,7 +109,7 @@ fn creates_loop<const N: usize>(
 
     let (start, dir) = path[step - 1];
     let mut it = StepIterator::from_state(
-        &map,
+        map,
         &mut visited,
         row_count,
         col_count,
@@ -185,11 +186,10 @@ impl<'a, const N: usize> StepIterator<'a, N> {
     fn animate(&mut self) {
         let ps: Vec<_> = self.collect();
 
-        print_map(&self.map, self.row_count, self.col_count);
+        print_map(self.map, self.row_count, self.col_count);
 
-        let mut count = 0;
         let mut marks = Vec::<((i32, i32), Direction)>::new();
-        for ((r, c), d) in ps {
+        for (count, ((r, c), d)) in ps.into_iter().enumerate() {
             marks.push(((r, c), d));
             while marks.len() > 100 {
                 marks.remove(0);
@@ -202,15 +202,14 @@ impl<'a, const N: usize> StepIterator<'a, N> {
 
             if count % 2 == 0 {
                 print!("\x1B[2J\x1B[1;1H");
-                print_map_with_history(&self.map, &visited, self.row_count, self.col_count);
+                print_map_with_history(self.map, &visited, self.row_count, self.col_count);
                 thread::sleep(Duration::from_millis(20));
             }
-            count += 1;
         }
     }
 }
 
-impl<'a, const N: usize> Iterator for StepIterator<'a, N> {
+impl<const N: usize> Iterator for StepIterator<'_, N> {
     type Item = ((i32, i32), Direction);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -306,8 +305,10 @@ fn print_map<const N: usize>(map: &Grid<N>, row_count: usize, col_count: usize) 
                     Tile::Start => '^',
                     Tile::Obstacle => '#',
                 })
-                .map(|c| format!("{} ", c))
-                .collect::<String>())
+                .fold(String::new(), |mut acc, c| {
+                    write!(acc, "{} ", c).unwrap();
+                    acc
+                }))
             .join("\n")
     );
 }
@@ -349,8 +350,10 @@ fn print_map_with_history<const N: usize>(
                     }
                     Tile::Obstacle => '#',
                 })
-                .map(|c| format!("{} ", c))
-                .collect::<String>())
+                .fold(String::new(), |mut acc, c| {
+                    write!(acc, "{} ", c).unwrap();
+                    acc
+                }))
             .join("\n")
     );
 }
@@ -392,12 +395,19 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // Only test manually
+    fn test_print() {
+        let (start, map, (row_count, col_count)) = parse::<16>(SAMPLE);
+        print_map(&map, row_count, col_count);
+    }
+
+    #[test]
     fn test_part1() {
-        assert_eq!(part1(SAMPLE.into()).unwrap(), 41);
+        assert_eq!(part1(SAMPLE).unwrap(), 41);
     }
 
     #[test]
     fn test_part2() {
-        assert_eq!(part2(SAMPLE.into()).unwrap(), 6);
+        assert_eq!(part2(SAMPLE).unwrap(), 6);
     }
 }

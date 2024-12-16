@@ -240,7 +240,7 @@ mod part_1 {
             scene.print_grid();
 
             let mut step = 0;
-            while scene.moves.len() > 0 {
+            while !scene.moves.is_empty() {
                 println!("\n Step {step}: {:?}", scene.moves.front().unwrap());
                 scene.step();
                 scene.print_grid();
@@ -502,7 +502,7 @@ mod part_2 {
             scene.print_grid();
 
             let mut step = 0;
-            while scene.moves.len() > 0 {
+            while !scene.moves.is_empty() {
                 println!("\n Step {step}: {:?}", scene.moves.front().unwrap());
                 scene.step();
                 scene.print_grid();

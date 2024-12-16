@@ -76,7 +76,7 @@ impl Map {
 
     fn locate_first_antinodes(&mut self) {
         let side = self.side as i32;
-        for (_, coords) in &self.antennas {
+        for coords in self.antennas.values() {
             for i in 0..coords.len() {
                 for j in i + 1..coords.len() {
                     let (xi, yi) = coords[i];
@@ -100,7 +100,7 @@ impl Map {
     fn locate_all_antinodes(&mut self) {
         let side = self.side as i32;
 
-        for (_, coords) in &self.antennas {
+        for coords in self.antennas.values() {
             for i in 0..coords.len() {
                 for j in i + 1..coords.len() {
                     let (xi, yi) = coords[i];
