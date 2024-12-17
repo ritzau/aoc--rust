@@ -18,20 +18,18 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
     println!("Part 2: {}", p2);
     assert_eq!(p2, 202367025818154);
 
-    // test_part(&input)?;
-
     Ok(())
 }
 
 fn part1(input: &Input) -> PuzzleResult<String> {
     let mut computer = ChronospatialComputer::parse(&input.read_to_string()?);
-    Ok(computer.execute())
+    Ok(computer.execute().iter().map(|v| v.to_string()).join(","))
 }
 
 fn part2(input: &Input) -> PuzzleResult<Value> {
     let computer = ChronospatialComputer::parse(&input.read_to_string()?);
 
-    fn gen(vs: &[u8]) -> Value {
+    fn to_value(vs: &[u8]) -> Value {
         let mut v = 0;
         for &x in vs {
             v = v << 3 | x as Value;
@@ -39,38 +37,40 @@ fn part2(input: &Input) -> PuzzleResult<Value> {
         v
     }
 
-    let expected = computer.opcodes.iter().map(|s| s.to_string()).join(",");
-
-    let n = computer.program.len();
-    let mut t = vec![0; 2 * n];
+    let n = computer.opcodes.len();
+    let mut codes = vec![0; n];
     let mut i = 0;
-    while i < 2 * n {
-        let pattern: String = expected[expected.len() - 2 * i - 1..].to_string();
-        while t[i] < 8 {
+    while i < n {
+        let needle = &computer.opcodes[n - i - 1..];
+        while codes[i] < 8 {
             let mut computer = computer.clone();
-            let tt = gen(&t);
-            computer.registers[0] = tt;
+            computer.registers[0] = to_value(&codes);
             let output = computer.execute();
 
-            if output.ends_with(&pattern) {
+            if output.ends_with(needle) {
+                // Found a code that works
                 break;
             } else {
-                t[i] += 1;
+                // Try next code
+                codes[i] += 1;
             }
         }
-        if t[i] < 8 {
+        if codes[i] < 8 {
+            // Found code, try next
             i += 1;
         } else {
-            t[i] = 0;
+            // No code found, reset and backtrack
+            codes[i] = 0;
             if i == 0 {
                 return Err(PuzzleError::Input("No solution found".into()));
             }
             i -= 1;
-            t[i] += 1;
+            // Start searching from the next code
+            codes[i] += 1;
         }
     }
 
-    Ok(gen(&t))
+    Ok(to_value(&codes))
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -142,8 +142,8 @@ impl ChronospatialComputer {
         }
     }
 
-    fn execute(&mut self) -> String {
-        let mut output = String::new();
+    fn execute(&mut self) -> Vec<u8> {
+        let mut output = vec![];
 
         while let Some((instruction, operand)) = self.program.get(self.instruction_pointer) {
             let operand = *operand;
@@ -155,7 +155,7 @@ impl ChronospatialComputer {
                 // an operand of 5 would divide A by 2^B.) The result of the division operation is
                 // truncated to an integer and then written to the A register.
                 Instruction::Adv => {
-                    self.registers[0] = self.registers[0] >> self.combo_value(operand);
+                    self.registers[0] >>= self.combo_value(operand);
                 }
                 // The bxl instruction (opcode 1) calculates the bitwise XOR of register B and the
                 // instruction's literal operand, then stores the result in register B.
@@ -190,11 +190,7 @@ impl ChronospatialComputer {
                 // separated by commas.)
                 Instruction::Out => {
                     let value = self.combo_value(operand) & 0x7;
-                    if output.len() > 0 {
-                        output += &format!(",{}", value);
-                    } else {
-                        output += &format!("{}", value);
-                    }
+                    output.push(value as u8);
                 }
                 // The bdv instruction (opcode 6) works exactly like the adv instruction except that
                 // the result is stored in the B register. (The numerator is still read from the A
