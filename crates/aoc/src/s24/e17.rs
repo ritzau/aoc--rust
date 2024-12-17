@@ -16,57 +16,53 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
 
     let p2 = part2(&input)?;
     println!("Part 2: {}", p2);
-    assert_eq!(p2, 202367025818154);
+    assert_eq!(p2, 202_367_025_818_154);
 
     Ok(())
 }
 
 fn part1(input: &Input) -> PuzzleResult<String> {
     let mut computer = ChronospatialComputer::parse(&input.read_to_string()?);
-    Ok(computer.execute().iter().map(|v| v.to_string()).join(","))
+    Ok(computer.execute().iter().join(","))
 }
 
 fn part2(input: &Input) -> PuzzleResult<Value> {
     let computer = ChronospatialComputer::parse(&input.read_to_string()?);
 
-    fn to_value(vs: &[u8]) -> Value {
-        let mut v = 0;
-        for &x in vs {
-            v = v << 3 | x as Value;
-        }
-        v
+    fn to_value(cs: &[u8]) -> Value {
+        cs.iter().fold(0, |value, &x| (value << 3) | x as Value)
     }
+
+    let run_program = |cs: &[u8]| {
+        let mut computer = computer.clone();
+        computer.registers[REG_A] = to_value(cs);
+        computer.execute()
+    };
 
     let n = computer.opcodes.len();
     let mut codes = vec![0; n];
+
+    let find_code = |cs: &mut [u8], i| {
+        let needle = &computer.opcodes[n - i - 1..];
+        while cs[i] < 8 {
+            if run_program(cs).ends_with(needle) {
+                return true;
+            }
+            cs[i] += 1;
+        }
+        false
+    };
+
     let mut i = 0;
     while i < n {
-        let needle = &computer.opcodes[n - i - 1..];
-        while codes[i] < 8 {
-            let mut computer = computer.clone();
-            computer.registers[0] = to_value(&codes);
-            let output = computer.execute();
-
-            if output.ends_with(needle) {
-                // Found a code that works
-                break;
-            } else {
-                // Try next code
-                codes[i] += 1;
-            }
-        }
-        if codes[i] < 8 {
-            // Found code, try next
+        if find_code(&mut codes, i) {
             i += 1;
-        } else {
-            // No code found, reset and backtrack
+        } else if i > 0 {
             codes[i] = 0;
-            if i == 0 {
-                return Err(PuzzleError::Input("No solution found".into()));
-            }
             i -= 1;
-            // Start searching from the next code
             codes[i] += 1;
+        } else {
+            return Err(PuzzleError::Input("No solution found".into()));
         }
     }
 
@@ -102,13 +98,16 @@ impl From<u8> for Instruction {
 }
 
 type Value = u64;
+const REG_A: usize = 0;
+const REG_B: usize = 1;
+const REG_C: usize = 2;
 
 #[derive(Clone, Debug)]
 struct ChronospatialComputer {
     registers: [Value; 3],
     program: Vec<(Instruction, u8)>,
     opcodes: Vec<u8>,
-    instruction_pointer: usize,
+    program_counter: usize,
 }
 
 impl ChronospatialComputer {
@@ -138,14 +137,14 @@ impl ChronospatialComputer {
             registers,
             program,
             opcodes,
-            instruction_pointer: 0,
+            program_counter: 0,
         }
     }
 
     fn execute(&mut self) -> Vec<u8> {
         let mut output = vec![];
 
-        while let Some((instruction, operand)) = self.program.get(self.instruction_pointer) {
+        while let Some((instruction, operand)) = self.program.get(self.program_counter) {
             let operand = *operand;
 
             match instruction {
@@ -155,27 +154,27 @@ impl ChronospatialComputer {
                 // an operand of 5 would divide A by 2^B.) The result of the division operation is
                 // truncated to an integer and then written to the A register.
                 Instruction::Adv => {
-                    self.registers[0] >>= self.combo_value(operand);
+                    self.registers[REG_A] >>= self.combo_value(operand);
                 }
                 // The bxl instruction (opcode 1) calculates the bitwise XOR of register B and the
                 // instruction's literal operand, then stores the result in register B.
                 Instruction::Bxl => {
-                    self.registers[1] ^= operand as Value;
+                    self.registers[REG_B] ^= operand as Value;
                 }
                 // The bst instruction (opcode 2) calculates the value of its combo operand modulo
                 // 8 (thereby keeping only its lowest 3 bits), then writes that value to the B
                 // register.
                 Instruction::Bst => {
-                    self.registers[1] = self.combo_value(operand) & 0x7;
+                    self.registers[REG_B] = self.combo_value(operand) & 0x7;
                 }
                 // The jnz instruction (opcode 3) does nothing if the A register is 0. However, if
                 // the A register is not zero, it jumps by setting the instruction pointer to the
                 // value of its literal operand; if this instruction jumps, the instruction pointer
                 // is not increased by 2 after this instruction.
                 Instruction::Jnz => {
-                    if self.registers[0] != 0 {
+                    if self.registers[REG_A] != 0 {
                         assert_eq!(operand % 2, 0);
-                        self.instruction_pointer = (operand as usize) / 2;
+                        self.program_counter = (operand as usize) / 2;
                         continue;
                     }
                 }
@@ -183,7 +182,7 @@ impl ChronospatialComputer {
                 // register C, then stores the result in register B. (For legacy reasons, this
                 // instruction reads an operand but ignores it.)
                 Instruction::Bxc => {
-                    self.registers[1] ^= self.registers[2];
+                    self.registers[REG_B] ^= self.registers[REG_C];
                 }
                 // The out instruction (opcode 5) calculates the value of its combo operand modulo
                 // 8, then outputs that value. (If a program outputs multiple values, they are
@@ -196,16 +195,16 @@ impl ChronospatialComputer {
                 // the result is stored in the B register. (The numerator is still read from the A
                 // register.)
                 Instruction::Bdv => {
-                    self.registers[1] = self.registers[0] >> self.combo_value(operand);
+                    self.registers[REG_B] = self.registers[REG_A] >> self.combo_value(operand);
                 }
                 // The cdv instruction (opcode 7) works exactly like the adv instruction except that
                 // the result is stored in the C register. (The numerator is still read from the A
                 // register.)
                 Instruction::Cdv => {
-                    self.registers[2] = self.registers[0] >> self.combo_value(operand);
+                    self.registers[REG_C] = self.registers[REG_A] >> self.combo_value(operand);
                 }
             }
-            self.instruction_pointer += 1;
+            self.program_counter += 1;
         }
 
         output
@@ -214,7 +213,9 @@ impl ChronospatialComputer {
     fn combo_value(&self, operand: u8) -> Value {
         match operand {
             0..=3 => operand as Value,
-            4..=6 => self.registers[operand as usize - 4],
+            4 => self.registers[REG_A],
+            5 => self.registers[REG_B],
+            6 => self.registers[REG_C],
             _ => panic!("Invalid operand: {}", operand),
         }
     }
