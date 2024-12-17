@@ -186,8 +186,6 @@ fn dijkstra<const N: usize>(reindeer: &Reindeer, maze: &Maze<N>) -> Option<(Scor
             return;
         }
 
-        let new = scores[r][c][usize::from(direction)] == Score::MAX;
-
         scores[r][c][usize::from(direction)] = score;
         queue.push(Step {
             r,
@@ -195,10 +193,6 @@ fn dijkstra<const N: usize>(reindeer: &Reindeer, maze: &Maze<N>) -> Option<(Scor
             direction,
             score,
         });
-
-        if new {
-            maze.print_with_path(scores);
-        }
     };
 
     let mut queue = BinaryHeap::<Step>::new();
