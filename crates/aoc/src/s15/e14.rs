@@ -1,7 +1,7 @@
 use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 use itertools::Itertools;
 use regex::Regex;
 use std::cmp::max;
@@ -12,10 +12,7 @@ const DAY: Day = Day(14);
 pub fn reindeer_olympics(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "Reindeer Olympics");
 
-    let input = aoc
-        .get_input(YEAR, DAY)?
-        .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Input error: {e}")))?;
+    let input = aoc.get_input(YEAR, DAY)?.read_to_string()?;
 
     let max_distance = part_1(&input)?;
     println!("aoc15e14a: {}", max_distance);

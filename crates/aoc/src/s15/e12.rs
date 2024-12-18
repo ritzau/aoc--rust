@@ -12,8 +12,7 @@ pub fn js_abacus_framework_io(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "JSAbacusFramework.io");
     let input = aoc
         .get_input(YEAR, DAY)?
-        .read_to_string()
-        .map_err(|_| PuzzleError::Input("foo".into()))?
+        .read_to_string()?
         .trim()
         .to_string();
 
@@ -28,7 +27,7 @@ pub fn js_abacus_framework_io(aoc: &AocCache) -> PuzzleResult<bool> {
 
 fn sum_numbers(input: &str) -> Result<i64, PuzzleError> {
     let non_digit_pattern =
-        Regex::new(r"[^-\d]+").map_err(|e| PuzzleError::Input(format!("Bad regex: {e}")))?;
+        Regex::new(r"[^-\d]+").expect("Failed to compile non-digit pattern regex");
 
     let sum: i64 = non_digit_pattern
         .split(input)

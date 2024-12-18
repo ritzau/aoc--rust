@@ -1,7 +1,7 @@
 use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 use std::cmp::min;
 use std::fmt::Display;
 
@@ -10,10 +10,7 @@ const DAY: Day = Day(18);
 pub fn like_a_gif_for_your_yard(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "Like a GIF For Your Yard");
 
-    let input = aoc
-        .get_input(YEAR, DAY)?
-        .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Input error: {e}")))?;
+    let input = aoc.get_input(YEAR, DAY)?.read_to_string()?;
 
     let mut grid = Grid::from(input.as_ref());
     for _ in 0..100 {
