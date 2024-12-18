@@ -1,7 +1,7 @@
 use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 
 const DAY: Day = Day(17);
 
@@ -10,8 +10,7 @@ pub fn no_such_thing_as_too_much(aoc: &AocCache) -> PuzzleResult<bool> {
 
     let input = aoc
         .get_input(YEAR, DAY)?
-        .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Can't read input: {e}")))?
+        .read_to_string()?
         .lines()
         .map(|l| l.parse::<i32>().unwrap())
         .collect::<Vec<_>>();

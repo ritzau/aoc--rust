@@ -1,7 +1,7 @@
 use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 
 const DAY: Day = Day(1);
 
@@ -9,10 +9,7 @@ const DAY: Day = Day(1);
 pub fn not_quite_lisp(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "Not Quite Lisp");
     let input = aoc.get_input(YEAR, DAY)?;
-
-    let input = input.read_to_string().map_err(|e| {
-        PuzzleError::Input(format!("Failed to read the input for day {}: {e}", DAY.0))
-    })?;
+    let input = input.read_to_string()?;
 
     let floor_count = count_floors(&input);
     println!("aoc15e01a: {}", floor_count);

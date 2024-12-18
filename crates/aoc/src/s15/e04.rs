@@ -12,15 +12,16 @@ const DAY: Day = Day(4);
 pub fn the_ideal_stocking_stuffer(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "The Ideal Stocking Stuffer");
 
-    let input = aoc
-        .get_input(YEAR, DAY)?
-        .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {DAY}: {e}")))?;
+    let input = aoc.get_input(YEAR, DAY)?.read_to_string()?;
 
-    let m = find_match_threaded(input.trim(), 5).unwrap();
+    let m = find_match_threaded(input.trim(), 5).ok_or(PuzzleError::Solution(
+        "No match found for 5 leading zeroes".into(),
+    ))?;
     println!("aoc15e04a: {}", m);
 
-    let m2 = find_match_threaded(input.trim(), 6).unwrap();
+    let m2 = find_match_threaded(input.trim(), 6).ok_or(PuzzleError::Solution(
+        "No match found for 6 leading zeroes".into(),
+    ))?;
     println!("aoc15e04b: {}", m2);
 
     Ok(m == 117946 && m2 == 3938038)

@@ -29,7 +29,7 @@ fn part_1_and_2(input: &Input) -> Result<(Score, usize), PuzzleError> {
     let maze = Maze::<142>::parse(&input.read_to_string()?);
     let reindeer = Reindeer::new(maze.start.0, maze.start.1);
     let (p1, p2) =
-        dijkstra(&reindeer, &maze).ok_or(PuzzleError::Input("No path found".to_string()))?;
+        dijkstra(&reindeer, &maze).ok_or(PuzzleError::Solution("No path found".to_string()))?;
 
     Ok((p1, p2))
 }

@@ -45,7 +45,7 @@ fn part2(input: &Input, width: usize, height: usize) -> PuzzleResult<(usize, usi
     }
 
     if low == 0 {
-        return Err(PuzzleError::Input("No solution found".into()));
+        return Err(PuzzleError::Solution("No solution found".into()));
     }
 
     Ok(grid.coordinates[low - 1])

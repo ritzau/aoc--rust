@@ -62,10 +62,10 @@ fn verify(f: AoCSolution) -> PuzzleResult<()> {
     let start = std::time::Instant::now();
 
     let result = match f(&cache) {
-        Err(err) => Err(PuzzleError::Solution(
-            format!("Execution failed: {:?}", err),
-            err.into(),
-        )),
+        Err(err) => Err(PuzzleError::Solution(format!(
+            "Execution failed: {:?}",
+            err
+        ))),
         _ => Ok(()),
     };
 

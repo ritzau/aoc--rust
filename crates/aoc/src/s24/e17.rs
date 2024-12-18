@@ -62,7 +62,7 @@ fn part2(input: &Input) -> PuzzleResult<Value> {
             i -= 1;
             codes[i] += 1;
         } else {
-            return Err(PuzzleError::Input("No solution found".into()));
+            return Err(PuzzleError::Solution("No solution found".into()));
         }
     }
 

@@ -3,17 +3,14 @@ use std::{collections::HashSet, iter};
 use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 
 const DAY: Day = Day(3);
 
 pub fn perfectly_spherical_houses_in_a_vacuum(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "Perfectly Spherical Houses in a Vacuum");
 
-    let input = aoc
-        .get_input(YEAR, DAY)?
-        .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {DAY}: {e}")))?;
+    let input = aoc.get_input(YEAR, DAY)?.read_to_string()?;
 
     let house_count = walk(&input);
     println!("aoc15e03a: {}", house_count);

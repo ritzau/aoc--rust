@@ -1,7 +1,7 @@
 use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 
 const DAY: Day = Day(2);
 
@@ -56,11 +56,7 @@ pub fn i_was_told_there_would_be_no_math(aoc: &AocCache) -> PuzzleResult<bool> {
     head(YEAR, DAY, "I Was Told there Would Be No Math");
     let input = aoc.get_input(YEAR, DAY)?;
 
-    let body: String = input
-        .read_to_string()
-        .map_err(|e| PuzzleError::Input(format!("Failed to read the input for day {DAY}: {e}")))?;
-
-    let packages = parse(body.as_str());
+    let packages = parse(&input.read_to_string()?);
     let area: u32 = packages.iter().map(|p| p.area()).sum();
     let ribbon: u32 = packages.iter().map(|p| p.ribbon()).sum();
     println!("aoc15e02a: {}", area);

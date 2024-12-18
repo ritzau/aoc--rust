@@ -18,10 +18,9 @@ pub enum PuzzleError {
     IO { msg: String, error: io::Error },
     Input(String),
     Verification(String),
-    Solution(String, Box<dyn Error>),
+    Solution(String),
     DownloadFailed(String, Box<dyn Error>),
     Cache(String, Box<dyn Error>),
-    Processing(String, Box<dyn Error>),
 }
 
 impl Error for PuzzleError {
@@ -46,7 +45,7 @@ where
             verify(f)?;
             Ok(())
         } else {
-            Err(PuzzleError::Input("No puzzles available".into()))
+            Err(PuzzleError::Solution("No puzzles available".into()))
         }
     }
 
@@ -67,10 +66,10 @@ fn verify(f: AoCSolution) -> PuzzleResult<()> {
 
     let result = match f(&cache) {
         Ok(false) => Err(PuzzleError::Verification("Verification failed".to_string())),
-        Err(err) => Err(PuzzleError::Solution(
-            format!("Execution failed: {:?}", err),
-            err.into(),
-        )),
+        Err(err) => Err(PuzzleError::Solution(format!(
+            "Execution failed: {:?}",
+            err
+        ))),
         _ => Ok(()),
     };
 

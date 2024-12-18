@@ -1,7 +1,7 @@
 use crate::cache::AocCache;
 use crate::input::InputFetcher;
 use crate::s15::YEAR;
-use crate::{head, Day, PuzzleError, PuzzleResult};
+use crate::{head, Day, PuzzleResult};
 
 const DAY: Day = Day(10);
 
@@ -10,8 +10,7 @@ pub fn elves_look_elves_say(aoc: &AocCache) -> PuzzleResult<bool> {
 
     let mut input = aoc
         .get_input(YEAR, DAY)?
-        .read_to_string()
-        .map_err(|_| PuzzleError::Input("foo".into()))?
+        .read_to_string()?
         .trim()
         .to_string();
 
