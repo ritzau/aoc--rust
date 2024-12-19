@@ -1,7 +1,6 @@
 use crate::YEAR;
 use aoc::{head, AocCache, Day, Input, InputFetcher, PuzzleResult};
-use fxhash::FxHashMap;
-use regex::Regex;
+use rayon::prelude::*;
 
 const DAY: Day = Day(19);
 
@@ -9,48 +8,43 @@ pub fn solve(aoc: &AocCache) -> PuzzleResult<()> {
     head(YEAR, DAY, "Linen Layout");
     let input = aoc.get_input(YEAR, DAY)?;
 
-    let p1 = part1(&input)?;
+    let (p1, p2) = part_1_and_2(&input)?;
     println!("Part 1: {}", p1);
     assert_eq!(p1, 363);
 
-    let p2 = part2(&input)?;
     println!("Part 2: {}", p2);
     assert_eq!(p2, 642535800868438);
 
     Ok(())
 }
 
-fn part1(input: &Input) -> PuzzleResult<usize> {
+fn part_1_and_2(input: &Input) -> PuzzleResult<(usize, usize)> {
     let linen = Linen::from(input.read_to_string()?.as_str());
-    let regex = linen.build_regex();
-    let count = linen
-        .requested_patterns
-        .iter()
-        .filter(|pattern| regex.is_match(pattern))
-        .count();
 
-    Ok(count)
-}
-
-fn part2(input: &Input) -> PuzzleResult<usize> {
-    let linen = Linen::from(input.read_to_string()?.as_str());
-    let mut memo = FxHashMap::default();
-
-    let encoded_towels: Vec<_> = linen
+    let mut towels: Vec<Vec<(u128, usize)>> = vec![Vec::new(); 8];
+    linen
         .towels
         .iter()
         .map(|p| (encode_string(p).0, p.len()))
-        .collect();
+        .for_each(|(towel, len)| {
+            let towel_ind = towel_index(towel);
+            towels[towel_ind].push((towel, len));
+        });
 
-    let count = linen
+    let (count, sum) = linen
         .requested_patterns
-        .iter()
+        .par_iter()
         .map(|p| (encode_string(p), p.len()))
         .map(|(pattern, pattern_len)| {
-            match_pattern(pattern, pattern_len, &encoded_towels, &mut memo)
+            let result = match_pattern(pattern, pattern_len, &towels, &mut [usize::MAX; 84]);
+            ((result > 0) as usize, result)
         })
-        .sum::<usize>();
-    Ok(count)
+        .reduce(
+            || (0, 0),
+            |(count1, sum1), (count2, sum2)| (count1 + count2, sum1 + sum2),
+        );
+
+    Ok((count, sum))
 }
 
 const WHITE: u8 = 0;
@@ -93,29 +87,38 @@ fn encode_string(s: &str) -> EncodedString {
 fn match_pattern(
     pattern: EncodedString,
     pattern_len: usize,
-    towels: &[(u128, usize)],
-    memo: &mut FxHashMap<(EncodedString, usize), usize>,
+    towels: &[Vec<(u128, usize)>],
+    memo: &mut [usize; 84],
 ) -> usize {
     if pattern_len == 0 {
         return 1;
     }
 
-    if let Some(&result) = memo.get(&(pattern, pattern_len)) {
-        return result;
+    if memo[pattern_len] != usize::MAX {
+        return memo[pattern_len];
     }
 
-    let mut result = 0;
-    for &(towel, towel_len) in towels.iter().filter(|&&(_, len)| len <= pattern_len) {
-        let mask = towel_mask(towel_len);
+    let towel_ind = towel_index(pattern.0);
+    let result: usize = towels[towel_ind]
+        .iter()
+        .filter(|&&(_, len)| len <= pattern_len)
+        .filter_map(|&(towel, towel_len)| {
+            let mask = towel_mask(towel_len);
+            if is_prefix(towel, pattern.0, mask) {
+                let tail = pattern_tail(pattern, towel_len);
+                Some(match_pattern(tail, pattern_len - towel_len, towels, memo))
+            } else {
+                None
+            }
+        })
+        .sum();
 
-        if is_prefix(towel, pattern.0, mask) {
-            let tail = pattern_tail(pattern, towel_len);
-            result += match_pattern(tail, pattern_len - towel_len, towels, memo);
-        }
-    }
-
-    memo.insert((pattern, pattern_len), result);
+    memo[pattern_len] = result;
     result
+}
+
+fn towel_index(towel: u128) -> usize {
+    (towel & 0b111) as usize
 }
 
 // All towels fit in a single u128
@@ -142,13 +145,6 @@ fn pattern_tail(pattern: EncodedString, len: usize) -> (u128, u128) {
 struct Linen {
     towels: Vec<String>,
     requested_patterns: Vec<String>,
-}
-
-impl Linen {
-    fn build_regex(&self) -> Regex {
-        let regex = format!(r"^({})*$", self.towels.join("|"));
-        Regex::new(&regex).expect("Invalid regex")
-    }
 }
 
 impl From<&str> for Linen {
@@ -179,13 +175,10 @@ bbrgwb
 ";
 
     #[test]
-    fn test_part1() {
-        assert_eq!(part1(&SAMPLE.into()).unwrap(), 6);
-    }
-
-    #[test]
-    fn test_part2() {
-        assert_eq!(part2(&SAMPLE.into()).unwrap(), 16);
+    fn test_parts() {
+        let (p1, p2) = part_1_and_2(&SAMPLE.into()).unwrap();
+        assert_eq!(p1, 6);
+        assert_eq!(p2, 16);
     }
 
     #[test]
