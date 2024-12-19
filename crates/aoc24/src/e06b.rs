@@ -1,7 +1,5 @@
 use crate::YEAR;
-use aoc::AocCache;
-use aoc::InputFetcher;
-use aoc::{head, Day, PuzzleResult};
+use aoc::{head, AocCache, Day, InputFetcher, PuzzleResult};
 use fxhash::FxHashSet;
 use itertools::Itertools;
 use rayon::prelude::*;
