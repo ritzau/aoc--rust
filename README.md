@@ -13,15 +13,15 @@ This repository contains solutions for the [Advent of Code](https://adventofcode
    ```
 
 2. **Prepare the session file**:
-   - Copy your session cookie from the browser and paste it into `cache/session.txt`.
-   - Or add the files manually to the cache named: `cache/aoc/2024/01.txt ...`
+    - Copy your session cookie from the browser and paste it into `cache/session.txt`.
+    - Or add the files manually to the cache named: `cache/aoc/2024/01.txt ...`
 
-3. **Build and Run**:
-   - Build the project using Cargo:
-     ```sh
-     cargo build
-     ```
-   - Run the project:
-     ```sh
-     cargo run
-     ```
+3. **Run**:
+    - Run the project (defaulting to s24):
+      ```sh
+      cargo run --release
+      ```
+    - Run the s15:
+      ```sh
+      cargo run -p aoc15 --release
+      ```

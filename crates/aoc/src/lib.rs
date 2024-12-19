@@ -1,14 +1,14 @@
-use cache::AocCache;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::time::Duration;
 use std::{fmt, io};
 
+pub use cache::AocCache;
+pub use input::{Input, InputFetcher, Lines};
+
 pub mod input;
 
-mod cache;
-pub mod s15;
-pub mod s24;
+pub mod cache;
 
 pub type PuzzleResult<T> = Result<T, PuzzleError>;
 type AoCSolution = fn(&AocCache) -> PuzzleResult<bool>;
@@ -92,7 +92,7 @@ impl From<io::Error> for PuzzleError {
 }
 
 #[derive(Debug)]
-pub struct Year(u16);
+pub struct Year(pub u16);
 
 impl Display for Year {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -101,7 +101,7 @@ impl Display for Year {
 }
 
 #[derive(Debug)]
-pub struct Day(u8);
+pub struct Day(pub u8);
 
 impl Display for Day {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -109,7 +109,7 @@ impl Display for Day {
     }
 }
 
-fn head(year: Year, day: Day, title: &str) {
+pub fn head(year: Year, day: Day, title: &str) {
     println!();
     println!("-- Advent of Code {} Day {}: {} ---", year.0, day.0, title)
 }
