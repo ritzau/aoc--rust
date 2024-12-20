@@ -1,5 +1,8 @@
 use aoc::{AocCache, PuzzleError, PuzzleResult, Year};
 
+#[macro_use]
+mod macros;
+
 mod e00;
 mod e01;
 mod e02;
@@ -27,28 +30,10 @@ const YEAR: Year = Year(2024);
 type AoCSolution = fn(&AocCache) -> PuzzleResult<()>;
 
 pub fn solve() -> PuzzleResult<()> {
-    run(&[
-        e01::solve,
-        e02::solve,
-        e03::solve,
-        e04::solve,
-        e05::solve,
-        e06::solve,
-        e07::solve,
-        e08::solve,
-        e09::solve,
-        e10::solve,
-        e11::solve,
-        e12::solve,
-        e13::solve,
-        e14::solve,
-        e15::solve,
-        e16::solve,
-        e17::solve,
-        e18::solve,
-        e19::solve,
-        e20::solve,
-    ])
+    run_solutions!(
+        e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17, e18,
+        e19, e20
+    )
 }
 
 fn run(seq: &[AoCSolution]) -> PuzzleResult<()> {
