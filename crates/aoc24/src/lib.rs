@@ -10,6 +10,7 @@ mod e03;
 mod e04;
 mod e05;
 mod e06;
+mod e06b;
 mod e07;
 mod e08;
 mod e09;
@@ -31,7 +32,7 @@ type AoCSolution = fn(&AocCache) -> PuzzleResult<()>;
 
 pub fn solve() -> PuzzleResult<()> {
     run_solutions!(
-        e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17, e18,
+        e01, e02, e03, e04, e05, e06, e06b, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16, e17, e18,
         e19, e20
     )
 }
